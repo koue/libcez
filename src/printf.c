@@ -22,7 +22,6 @@
 
 #include "cez.h"
 
-typedef sqlite3_int64 i64;
 typedef sqlite3_uint64 u64;
 
 /* Two custom conversions are used to show a prefix of artifact hashes:

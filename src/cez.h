@@ -99,6 +99,8 @@ struct Stmt {
 ** DB
 */
 
+typedef sqlite3_int64 i64;
+
 char *db_text(const char *zDefault, const char *zSql, ...);
 int db_finalize(Stmt *pStmt);
 void db_check_result(int rc);

@@ -308,6 +308,22 @@ void db_end_transaction(int rollbackFlag){
 /*
 ** Execute a query and return a single integer value.
 */
+i64 db_int64(i64 iDflt, const char *zSql, ...){
+  va_list ap;
+  Stmt s;
+  i64 rc;
+  va_start(ap, zSql);
+  db_vprepare(&s, 0, zSql, ap);
+  va_end(ap);
+  if( db_step(&s)!=SQLITE_ROW ){
+    rc = iDflt;
+  }else{
+    rc = db_column_int64(&s, 0);
+  }
+  db_finalize(&s);
+  return rc;
+}
+
 int db_int(int iDflt, const char *zSql, ...){
   va_list ap;
   Stmt s;
