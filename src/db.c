@@ -379,7 +379,7 @@ int db_column_int(Stmt *pStmt, int N){
   return sqlite3_column_int(pStmt->pStmt, N);
 }
 
-sqlite3_int64 db_column_int64(Stmt *pStmt, int N){
+i64 db_column_int64(Stmt *pStmt, int N){
   return sqlite3_column_int64(pStmt->pStmt, N);
 }
 
