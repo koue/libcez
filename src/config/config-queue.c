@@ -28,7 +28,13 @@
  *
  */
 
-#include "cez.h"
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/queue.h>
+
+#include "cez-config.h"
 
 TAILQ_HEAD(config_queue_head, config_queue_param) config_queue_head = TAILQ_HEAD_INITIALIZER(config_queue_head);
 

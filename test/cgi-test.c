@@ -28,7 +28,8 @@
  *
  */
 
-#include "cez.h"
+#include "cez-fossil.h"
+#include "cez-misc.h"
 
 int main(void){
   char *z;

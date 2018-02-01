@@ -28,7 +28,11 @@
  *
  */
 
-#include "cez.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "cez-config.h"
+#include "cez-misc.h"
 
 int main(void) {
 	char *value;

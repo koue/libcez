@@ -28,11 +28,12 @@
  *
  */
 
-#include "cez.h"
+#include "cez-fossil.h"
+#include "cez-misc.h"
 
 Global g;
 
-const char TestSchema[] = 
+const char TestSchema[] =
 "CREATE TABLE tbl_test("
 " id INTEGER PRIMARY KEY,"
 " name TEXT"

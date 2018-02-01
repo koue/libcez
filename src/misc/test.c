@@ -28,7 +28,9 @@
  *
  */
 
-#include "cez.h"
+#include <stdio.h>
+
+#include "cez-misc.h"
 
 void test_line(void) {
   for ( int i = 0; i < 81; i++)

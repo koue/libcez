@@ -20,7 +20,7 @@
 **
 */
 
-#include "cez.h"
+#include "cez-fossil.h"
 
 /*
 ** All static variable that a used by only this file are gathered into

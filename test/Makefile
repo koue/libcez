@@ -1,22 +1,45 @@
 #
-CC=cc -Wall -Wstrict-prototypes -g -O0 -I../src -I/usr/local/include -I../src -L../src -L/usr/local/lib
+CC=		cc -Wall -Wstrict-prototypes -g -O0
+
+CFLAGS+=	-I../src/config \
+		-I../src/fossil \
+		-I../src/misc
+CFLAGS+=	-I/usr/local/include
+
+LDFLAGS+=	-L/usr/local/lib
+
+LDADD=		-lsqlite3 \
+		../src/config/libcezconfig.a \
+		../src/fossil/libcezfossil.a \
+		../src/misc/libcezmisc.a
+
+CONF_DEP=	../src/config/cez-config.h \
+		../src/config/libcezconfig.a
+
+FOSSIL_DEP=	../src/fossil/cez-cson_amalgamation.h \
+		../src/fossil/cez-fossil.h \
+		../src/fossil/libcezfossil.a
+
+MISC_DEP=	../src/misc/cez-misc.h \
+		../src/misc/libcezmisc.a
+
 
 all: libtest jsontest cgitest configarraytest configqueuetest
 
-libtest: lib-test.c ../src/cez.h ../src/libcez.a
-	$(CC) -o lib-test lib-test.c -lsqlite3 ../src/libcez.a
+libtest: lib-test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o lib-test lib-test.c $(LDADD)
 
-jsontest: json-test.c ../src/cez.h ../src/libcez.a
-	$(CC) -o json-test json-test.c -lsqlite3 ../src/libcez.a
+jsontest: json-test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o json-test json-test.c $(LDADD)
 
-cgitest: cgi-test.c ../src/cez.h ../src/libcez.a
-	$(CC) -o cgi-test cgi-test.c ../src/libcez.a
+cgitest: cgi-test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o cgi-test cgi-test.c $(LDADD)
 
-configarraytest: config-array-test.c ../src/cez.h ../src/libcez.a
-	$(CC) -o config-array-test config-array-test.c ../src/libcez.a
+configarraytest: config-array-test.c $(CONFIG_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o config-array-test config-array-test.c $(LDADD)
 
-configqueuetest: config-queue-test.c ../src/cez.h ../src/libcez.a
-	$(CC) -o config-queue-test config-queue-test.c ../src/libcez.a
+configqueuetest: config-queue-test.c $(CONFIG_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o config-queue-test config-queue-test.c $(LDADD)
 
 # keep this empty otherwise installation fails
 install:

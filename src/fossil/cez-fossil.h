@@ -17,8 +17,8 @@
 *******************************************************************************
 */
 
-#ifndef _CEZ_H
-#define _CEZ_H
+#ifndef _CEZ_FOSSIL_H
+#define _CEZ_FOSSIL_H
 
 #include <assert.h>
 #include <ctype.h>
@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
-#include <sys/queue.h>
 #include <time.h>
 
 typedef struct Global Global;
@@ -136,37 +135,5 @@ int dehttpize(char *z);
 void add_param_list(char *z, int terminator);
 void cgi_set_parameter(const char *zName, const char *zValue);
 void cgi_replace_parameter(const char *zName, const char *zValue);
-
-/*
-** TEST
-*/
-void test_line(void);
-void test_start(void);
-void test_end(void);
-void test_ok(const char *str);
-void test_fail(const char *str);
-void test_succeed(void);
-
-/*
-** CONFIGFILE
-*/
-typedef void (*configfile_value_fn)(const char *name, const char *value);
-extern int configfile_parse(const char *filename, configfile_value_fn fn);
-
-/*
-** CONFIG_ARRAY
-*/
-void config_array_cb(const char *name, const char *value);
-void config_array_print(void);
-char *config_array_value_get(const char *name);
-void config_array_purge(void);
-
-/*
-** CONFIG_QUEUE
-*/
-void config_queue_cb(const char *name, const char *value);
-void config_queue_print(void);
-void config_queue_purge(void);
-char *config_queue_value_get(const char *name);
 
 #endif

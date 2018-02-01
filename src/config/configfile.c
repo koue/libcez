@@ -7,7 +7,11 @@
  *   (see COPYING for full license text)
  */
 
-#include "cez.h"
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "cez-config.h"
 
 static int next_char(FILE *f)
 {
@@ -30,6 +34,11 @@ static void skip_line(FILE *f)
 		;
 }
 
+static int configfile_isspace(char c)
+{
+	return c==' ' || (c<='\r' && c>='\t');
+}
+
 static int read_config_line(FILE *f, char *line, const char **value, int bufsize)
 {
 	int i = 0, isname = 0;
@@ -41,7 +50,7 @@ static int read_config_line(FILE *f, char *line, const char **value, int bufsize
 			skip_line(f);
 			continue;
 		}
-		if (!isname && isspace(c))
+		if (!isname && configfile_isspace(c))
 			continue;
 
 		if (c=='=' && !*value) {

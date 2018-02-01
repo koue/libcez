@@ -28,8 +28,9 @@
  *
  */
 
-#include "cez.h"
-#include "cson_amalgamation.h"
+#include "cez-fossil.h"
+#include "cez-cson_amalgamation.h"
+#include "cez-misc.h"
 
 int main(void){
   Blob json_list = empty_blob; /* json list of github user info */

@@ -20,7 +20,7 @@
 ** (ex: mprintf()) and for output to the console.
 */
 
-#include "cez.h"
+#include "cez-fossil.h"
 
 typedef sqlite3_uint64 u64;
 
