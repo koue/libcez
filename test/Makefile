@@ -9,6 +9,7 @@ CFLAGS+=	-I/usr/local/include
 LDFLAGS+=	-L/usr/local/lib
 
 LDADD=		-lsqlite3 \
+		-lcrypto \
 		../src/config/libcezconfig.a \
 		../src/fossil/libcezfossil.a \
 		../src/misc/libcezmisc.a
@@ -24,7 +25,7 @@ MISC_DEP=	../src/misc/cez-misc.h \
 		../src/misc/libcezmisc.a
 
 
-all: libtest jsontest cgitest configarraytest configqueuetest
+all: libtest jsontest cgitest configarraytest configqueuetest hmactest
 
 libtest: lib-test.c $(FOSSIL_DEP) $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o lib-test lib-test.c $(LDADD)
@@ -41,6 +42,9 @@ configarraytest: config-array-test.c $(CONFIG_DEP) $(MISC_DEP)
 configqueuetest: config-queue-test.c $(CONFIG_DEP) $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o config-queue-test config-queue-test.c $(LDADD)
 
+hmactest: hmac-test.c $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o hmac-test hmac-test.c $(LDADD)
+
 # keep this empty otherwise installation fails
 install:
 
@@ -50,6 +54,7 @@ test:
 	QUERY_STRING='show=test&go=pass' ./cgi-test
 	./config-array-test
 	./config-queue-test
+	./hmac-test
 
 clean:
 	rm -f *-test *.core

@@ -16,7 +16,7 @@
 #define _CEZ_MISC_H
 
 /*
-** MISC
+** TEST
 */
 void test_line(void);
 void test_start(void);
@@ -24,5 +24,11 @@ void test_end(void);
 void test_ok(const char *str);
 void test_fail(const char *str);
 void test_succeed(void);
+
+/*
+** HMAC
+*/
+void HMAC_encrypt_me(const char *zString, char **zResult);
+int HMAC_verify_me(const char *zString, const char *zResult);
 
 #endif
