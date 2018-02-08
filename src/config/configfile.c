@@ -80,11 +80,18 @@ int configfile_parse(const char *filename, configfile_value_fn fn)
 	FILE *f;
 
 	if (!(f = fopen(filename, "r"))) {
-		fprintf(stderr, "[ERROR] %s: %s, %s\n", __func__, filename, strerror(errno));
+		fprintf(stderr, "[ERROR] %s: %s, %s\n", __func__, filename,
+								strerror(errno));
 		return (-1);
 	}
-	while((len = read_config_line(f, line, &value, sizeof(line))) > 0)
+	while((len = read_config_line(f, line, &value, sizeof(line))) > 0) {
+		if (value == NULL) {
+			fprintf(stderr, "[ERROR] %s: configuration error: %s\n",
+								__func__, line);
+			return (-1);
+		}
 		fn(line, value);
+	}
 	fclose(f);
 	return (0);
 }
