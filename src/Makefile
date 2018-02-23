@@ -1,3 +1,3 @@
-SUBDIR= config/ fossil/ misc/
+SUBDIR= config/ fossil/ misc/ prayer/
 
 .include <bsd.subdir.mk>

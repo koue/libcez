@@ -3,7 +3,8 @@ CC=		cc -Wall -Wstrict-prototypes -g -O0
 
 CFLAGS+=	-I../src/config \
 		-I../src/fossil \
-		-I../src/misc
+		-I../src/misc \
+		-I../src/prayer
 CFLAGS+=	-I/usr/local/include
 
 LDFLAGS+=	-L/usr/local/lib
@@ -12,7 +13,8 @@ LDADD=		-lsqlite3 \
 		-lcrypto \
 		../src/config/libcezconfig.a \
 		../src/fossil/libcezfossil.a \
-		../src/misc/libcezmisc.a
+		../src/misc/libcezmisc.a \
+		../src/prayer/libcezprayer.a
 
 CONF_DEP=	../src/config/cez-config.h \
 		../src/config/libcezconfig.a
@@ -24,8 +26,11 @@ FOSSIL_DEP=	../src/fossil/cez-cson_amalgamation.h \
 MISC_DEP=	../src/misc/cez-misc.h \
 		../src/misc/libcezmisc.a
 
+PRAYER_DEP=	../src/prayer/cez-prayer.h \
+		../src/prayer/libcezprayer.a
 
-all: libtest jsontest cgitest configarraytest configqueuetest hmactest
+
+all: libtest jsontest cgitest configarraytest configqueuetest hmactest assoctest
 
 libtest: lib-test.c $(FOSSIL_DEP) $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o lib-test lib-test.c $(LDADD)
@@ -45,6 +50,9 @@ configqueuetest: config-queue-test.c $(CONFIG_DEP) $(MISC_DEP)
 hmactest: hmac-test.c $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o hmac-test hmac-test.c $(LDADD)
 
+assoctest: assoc-test.c $(PRAYER_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o assoc-test assoc-test.c $(LDADD)
+
 # keep this empty otherwise installation fails
 install:
 
@@ -55,6 +63,7 @@ test:
 	./config-array-test
 	./config-queue-test
 	./hmac-test
+	./assoc-test
 
 clean:
 	rm -f *-test *.core
