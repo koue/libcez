@@ -1,3 +1,9 @@
+20180223:
+
+  Add pool functions. Defines a group of arbitrary size memory assignment.
+  Add assoc functions. Perl style associative array built on pools, with add,
+  remove and lookup methods.
+
 20180202:
 
   Add cmake find module.
