@@ -36,18 +36,21 @@
 int main(void){
 	char *zHMACresult = NULL;
 	const char *string = "power overwhelming";
+/* /usr/bin/head -c 200 /dev/urandom | tr -cd '[:graph:]' | head -c 100 */
+	const char *secret =
+	"kG/+wtEm~bl7w|</vNLIa|CR6R|JO]K4(w2#!(:AHn;-}Y.Y^HL/?+F}/e),k.2cYj>{2vS";
 	char salt[128];
 
 	test_start();
 
-	HMAC_encrypt_me(string, &zHMACresult);
+	HMAC_encrypt_me(secret, string, &zHMACresult);
 	snprintf(salt, sizeof(salt), "%s", zHMACresult);
 	free(zHMACresult);
 	test_ok("HMAC_ecnrypt_me");
 	/* HMAC_verify_me returns 0 if OK */
-	HMAC_verify_me(string, salt) ? test_fail("HMAC_verify_me true") :
+	HMAC_verify_me(secret, string, salt) ? test_fail("HMAC_verify_me true") :
 						test_ok("HMAC_verify_me true");
-	HMAC_verify_me(string, "WRONG") ? test_ok("HMAC_verify_me false") :
+	HMAC_verify_me(secret, string, "WRONG") ? test_ok("HMAC_verify_me false") :
 						test_fail("HMAC_verify_me false");
 
 	test_succeed();

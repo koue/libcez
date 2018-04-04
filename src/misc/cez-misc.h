@@ -28,7 +28,8 @@ void test_succeed(void);
 /*
 ** HMAC
 */
-void HMAC_encrypt_me(const char *zString, char **zResult);
-int HMAC_verify_me(const char *zString, const char *zResult);
+void HMAC_encrypt_me(const char *zSecret, const char *zString, char **zResult);
+int HMAC_verify_me(const char *zSecret, const char *zString,
+							const char *zResult);
 
 #endif

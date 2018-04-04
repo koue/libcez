@@ -39,10 +39,6 @@
 
 #include "cez-misc.h"
 
-/* /usr/bin/head -c 200 /dev/urandom | tr -cd '[:graph:]' | head -c 100 */
-static const char *secret =
-  "kG/+wtEm~bl7w|</vNLIa|CR6R|JO]K4(w2#!(:AHn;-}Y.Y^HL/?+F}/e),k.2cYj>{2vS";
-
 /*
 ** Malloc routine.
 */
@@ -75,7 +71,7 @@ static char *hmac_strdup(const char *zOrig){
 ** HMAC_encrypt_me(string, &result);
 ** free(result);
 */
-void HMAC_encrypt_me(const char *zString, char **zResult){
+void HMAC_encrypt_me(const char *zSecret, const char *zString, char **zResult){
   char hmac_result[64];
   unsigned char *result;
   unsigned int len = 20;
@@ -84,7 +80,7 @@ void HMAC_encrypt_me(const char *zString, char **zResult){
   result = (unsigned char*)malloc(sizeof(char) * len);
 
   HMAC_CTX_init(&ctx);
-  HMAC_Init_ex(&ctx, secret, strlen(secret), EVP_sha1(), NULL);
+  HMAC_Init_ex(&ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
   HMAC_Update(&ctx, (unsigned char*)zString, strlen(zString));
   HMAC_Final(&ctx, result, &len);
 
@@ -99,7 +95,8 @@ void HMAC_encrypt_me(const char *zString, char **zResult){
 /*
 ** HMAC verify string.
 */
-int HMAC_verify_me(const char *zString, const char *zResult){
+int HMAC_verify_me(const char *zSecret, const char *zString,
+							const char *zResult){
   char hmac_result[64];
   unsigned char *result;
   unsigned int len = 20;
@@ -108,7 +105,7 @@ int HMAC_verify_me(const char *zString, const char *zResult){
   result = (unsigned char *)malloc(sizeof(char) * len);
 
   HMAC_CTX_init(&ctx);
-  HMAC_Init_ex(&ctx, secret, strlen(secret), EVP_sha1(), NULL);
+  HMAC_Init_ex(&ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
   HMAC_Update(&ctx, (unsigned char*)zString, strlen(zString));
   HMAC_Final(&ctx, result, &len);
 
