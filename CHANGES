@@ -1,3 +1,7 @@
+20180416:
+
+  Replace '-' with '_' in all filenames. Update cmake find module.
+
 20180223:
 
   Add pool functions. Defines a group of arbitrary size memory assignment.
