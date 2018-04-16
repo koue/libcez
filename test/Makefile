@@ -16,54 +16,54 @@ LDADD=		-lsqlite3 \
 		../src/misc/libcezmisc.a \
 		../src/prayer/libcezprayer.a
 
-CONF_DEP=	../src/config/cez-config.h \
+CONF_DEP=	../src/config/cez_config.h \
 		../src/config/libcezconfig.a
 
-FOSSIL_DEP=	../src/fossil/cez-cson_amalgamation.h \
-		../src/fossil/cez-fossil.h \
+FOSSIL_DEP=	../src/fossil/cez_cson_amalgamation.h \
+		../src/fossil/cez_fossil.h \
 		../src/fossil/libcezfossil.a
 
-MISC_DEP=	../src/misc/cez-misc.h \
+MISC_DEP=	../src/misc/cez_misc.h \
 		../src/misc/libcezmisc.a
 
-PRAYER_DEP=	../src/prayer/cez-prayer.h \
+PRAYER_DEP=	../src/prayer/cez_prayer.h \
 		../src/prayer/libcezprayer.a
 
 
 all: libtest jsontest cgitest configarraytest configqueuetest hmactest assoctest
 
-libtest: lib-test.c $(FOSSIL_DEP) $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o lib-test lib-test.c $(LDADD)
+libtest: lib_test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o lib_test lib_test.c $(LDADD)
 
-jsontest: json-test.c $(FOSSIL_DEP) $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o json-test json-test.c $(LDADD)
+jsontest: json_test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o json_test json_test.c $(LDADD)
 
-cgitest: cgi-test.c $(FOSSIL_DEP) $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o cgi-test cgi-test.c $(LDADD)
+cgitest: cgi_test.c $(FOSSIL_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o cgi_test cgi_test.c $(LDADD)
 
-configarraytest: config-array-test.c $(CONFIG_DEP) $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o config-array-test config-array-test.c $(LDADD)
+configarraytest: config_array_test.c $(CONFIG_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o config_array_test config_array_test.c $(LDADD)
 
-configqueuetest: config-queue-test.c $(CONFIG_DEP) $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o config-queue-test config-queue-test.c $(LDADD)
+configqueuetest: config_queue_test.c $(CONFIG_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o config_queue_test config_queue_test.c $(LDADD)
 
-hmactest: hmac-test.c $(MISC_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o hmac-test hmac-test.c $(LDADD)
+hmactest: hmac_test.c $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o hmac_test hmac_test.c $(LDADD)
 
-assoctest: assoc-test.c $(PRAYER_DEP)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o assoc-test assoc-test.c $(LDADD)
+assoctest: assoc_test.c $(PRAYER_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o assoc_test assoc_test.c $(LDADD)
 
 # keep this empty otherwise installation fails
 install:
 
 test:
-	./json-test
-	./lib-test
-	QUERY_STRING='show=test&go=pass' ./cgi-test
-	./config-array-test
-	./config-queue-test
-	./hmac-test
-	./assoc-test
+	./json_test
+	./lib_test
+	QUERY_STRING='show=test&go=pass' ./cgi_test
+	./config_array_test
+	./config_queue_test
+	./hmac_test
+	./assoc_test
 
 clean:
-	rm -f *-test *.core
+	rm -f *_test *.core

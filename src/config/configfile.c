@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cez-config.h"
+#include "cez_config.h"
 
 static int next_char(FILE *f)
 {

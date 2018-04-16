@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,48 +28,50 @@
  *
  */
 
-#include "cez-prayer.h"
-
-#include "cez-misc.h"
-
-struct item {
-	struct pool *pool;	/* Allocation pool */
-	struct assoc *assoc;	/* Associative array for fast lookups */
-};
+#include "cez_fossil.h"
+#include "cez_cson_amalgamation.h"
+#include "cez_misc.h"
 
 int main(void){
-	struct pool *pool = pool_create(1024);
-	struct item *i;
+  Blob json_list = empty_blob; /* json list of github user info */
+  char *command = "cat sample.json";
+  FILE *pf;
 
-	test_start();
+  test_start();
 
-	i = pool_alloc(pool, sizeof(struct item));
-	i->pool = pool;
-	i->assoc = assoc_create(pool, 16, T);
-	test_ok("assoc_create");
-	/* Add word to assoc chain */
-	assoc_update(i->assoc, "first", "1", NIL);
-	assoc_update(i->assoc, "second", "1", NIL);
-	assoc_update(i->assoc, "third", "1", NIL);
-	test_ok("assoc_update");
+  cson_parse_opt popt = cson_parse_opt_empty;
+  cson_parse_info pinfo = cson_parse_info_empty;
+  cson_value * cson_root = NULL;
+  cson_object * cson_obj = NULL;
+  cson_value * obj_value = NULL;
 
-	if(assoc_lookup(i->assoc, "second"))
-		test_ok("assoc_lookup found");
-	else
-		test_fail("assoc_lookup found");
+  pf = popen(command, "r");
+  blob_read_from_channel(&json_list, pf, -1);
+  pclose(pf);
 
-	assoc_delete(i->assoc, "second");
-	test_ok("assoc_delete");
+  int rc = cson_parse_string(&cson_root, blob_str(&json_list),
+                            strlen(blob_str(&json_list)), &popt, &pinfo);
 
-	if(assoc_lookup(i->assoc, "second"))
-		test_fail("assoc_lookup missing");
-	else
-		test_ok("assoc_lookup missing");
+  if(rc) { test_fail("json parse error"); goto done; }
 
-	pool_free(i->pool);
+  cson_obj = cson_value_get_object(cson_root);
+  if(cson_obj == NULL) { test_fail("result is not object"); goto done; }
 
-	test_succeed();
-	test_end();
+  obj_value = cson_object_get(cson_obj, "after");
+  char const *after = cson_string_cstr(cson_value_get_string(obj_value));
+  test_ok(after);
 
-	return (0);
+  obj_value = cson_object_get(cson_obj, "notexist");
+  char const *notexist = cson_string_cstr(cson_value_get_string(obj_value));
+  test_ok(notexist);
+
+  test_succeed();
+
+done:
+  cson_value_free(cson_root);
+  blob_reset(&json_list);
+
+  test_end();
+
+  return (0);
 }

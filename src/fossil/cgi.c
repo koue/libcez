@@ -23,7 +23,7 @@
 ** decode strings in HTML or HTTP.
 */
 
-#include "cez-fossil.h"
+#include "cez_fossil.h"
 
 /*
 ** Information about all query parameters and cookies are stored

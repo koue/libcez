@@ -28,8 +28,8 @@
  *
  */
 
-#include "cez-fossil.h"
-#include "cez-misc.h"
+#include "cez_fossil.h"
+#include "cez_misc.h"
 
 Global g;
 

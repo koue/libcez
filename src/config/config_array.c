@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cez-config.h"
+#include "cez_config.h"
 
 static int nAllocQP = 0;        /* Space allocated for aParamQP[] */
 static int nUsedQP = 0;         /* Space actually used in aParamQP[] */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,50 +28,19 @@
  *
  */
 
-#include "cez-fossil.h"
-#include "cez-cson_amalgamation.h"
-#include "cez-misc.h"
+#ifndef _CEZ_PRAYER_H
+#define _CEZ_PRAYER_H
 
-int main(void){
-  Blob json_list = empty_blob; /* json list of github user info */
-  char *command = "cat sample.json";
-  FILE *pf;
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-  test_start();
+#include "cez_prayer_misc.h"
 
-  cson_parse_opt popt = cson_parse_opt_empty;
-  cson_parse_info pinfo = cson_parse_info_empty;
-  cson_value * cson_root = NULL;
-  cson_object * cson_obj = NULL;
-  cson_value * obj_value = NULL;
+#include "cez_prayer_assoc.h"
+#include "cez_prayer_pool.h"
+#include "cez_prayer_str.h"
 
-  pf = popen(command, "r");
-  blob_read_from_channel(&json_list, pf, -1);
-  pclose(pf);
-
-  int rc = cson_parse_string(&cson_root, blob_str(&json_list),
-                            strlen(blob_str(&json_list)), &popt, &pinfo);
-
-  if(rc) { test_fail("json parse error"); goto done; }
-
-  cson_obj = cson_value_get_object(cson_root);
-  if(cson_obj == NULL) { test_fail("result is not object"); goto done; }
-
-  obj_value = cson_object_get(cson_obj, "after");
-  char const *after = cson_string_cstr(cson_value_get_string(obj_value));
-  test_ok(after);
-
-  obj_value = cson_object_get(cson_obj, "notexist");
-  char const *notexist = cson_string_cstr(cson_value_get_string(obj_value));
-  test_ok(notexist);
-
-  test_succeed();
-
-done:
-  cson_value_free(cson_root);
-  blob_reset(&json_list);
-
-  test_end();
-
-  return (0);
-}
+#endif

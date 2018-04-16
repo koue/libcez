@@ -20,7 +20,7 @@
 ** or binary data.
 */
 
-#include "cez-fossil.h"
+#include "cez_fossil.h"
 
 const Blob empty_blob = BLOB_INITIALIZER;
 

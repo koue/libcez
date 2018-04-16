@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,40 +28,34 @@
  *
  */
 
-#include "cez-fossil.h"
-#include "cez-misc.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "cez_misc.h"
 
 int main(void){
-  char *z;
+	char *zHMACresult = NULL;
+	const char *string = "power overwhelming";
+/* /usr/bin/head -c 200 /dev/urandom | tr -cd '[:graph:]' | head -c 100 */
+	const char *secret =
+	"kG/+wtEm~bl7w|</vNLIa|CR6R|JO]K4(w2#!(:AHn;-}Y.Y^HL/?+F}/e),k.2cYj>{2vS";
+	char salt[128];
 
-  test_start();
+	test_start();
 
-  cgi_setenv("QUERY_STRING", getenv("QUERY_STRING"));
-  test_ok("cgi_setenv");
-  z = (char*)P("QUERY_STRING");
-  if( z ){
-    z = mprintf("%s", z);
-    add_param_list(z, '&');
-    test_ok("add_param_list");
-    free(z);
-  } else
-	goto fail;
+	HMAC_encrypt_me(secret, string, &zHMACresult);
+	snprintf(salt, sizeof(salt), "%s", zHMACresult);
+	free(zHMACresult);
+	test_ok("HMAC_ecnrypt_me");
+	/* HMAC_verify_me returns 0 if OK */
+	HMAC_verify_me(secret, string, salt) ? test_fail("HMAC_verify_me true") :
+						test_ok("HMAC_verify_me true");
+	HMAC_verify_me(secret, string, "WRONG") ? test_ok("HMAC_verify_me false") :
+						test_fail("HMAC_verify_me false");
 
-  const char *p = P("show");
-  const char *s = P("go");
-  if ( p && s) {
-    printf("%20d, %s, %s\n", 0, p, s);
-    test_ok("get param");
-  }
-  else {
-    test_fail("get param");
-    goto fail;
-  }
+	test_succeed();
+	test_end();
 
-  test_succeed();
+	return (0);
 
-fail:
-  test_end();
-
-  return (0);
 }

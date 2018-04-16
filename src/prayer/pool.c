@@ -2,7 +2,7 @@
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez-prayer.h"
+#include "cez_prayer.h"
 
 /* Class which provides memory allocation pools: client routines can make
  * arbitary number of allocation requests against a single pool, but all

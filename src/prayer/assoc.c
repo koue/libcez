@@ -2,7 +2,7 @@
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez-prayer.h"
+#include "cez_prayer.h"
 
 /* Class which provides simple associative arrays (aka hash tables). Used
  * to be called "hash", however c-client in IMAP 2001 toolkit defines its

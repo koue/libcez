@@ -37,7 +37,7 @@
 #include <string.h>
 #include <openssl/hmac.h>
 
-#include "cez-misc.h"
+#include "cez_misc.h"
 
 /*
 ** Malloc routine.

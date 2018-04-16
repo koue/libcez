@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,29 +28,46 @@
  *
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "cez_prayer.h"
 
-#include "cez-config.h"
-#include "cez-misc.h"
+#include "cez_misc.h"
 
-int main(void) {
-	char *value;
+struct item {
+	struct pool *pool;	/* Allocation pool */
+	struct assoc *assoc;	/* Associative array for fast lookups */
+};
+
+int main(void){
+	struct pool *pool = pool_create(1024);
+	struct item *i;
 
 	test_start();
 
-	if (configfile_parse("./configrc", config_queue_cb) == -1)
-		exit(1);
-	test_ok("configfile_parse");
-	config_queue_print();
-	test_ok("config_queue_print");
-	value = config_queue_value_get("param4");
-	printf("param4 = %s\n", value);
-	value = config_queue_value_get("param5");
-	printf("param5 = %s\n", value);
-	test_ok("config_queue_value_get");
-	config_queue_purge();
-	test_ok("config_queue_purge");
+	i = pool_alloc(pool, sizeof(struct item));
+	i->pool = pool;
+	i->assoc = assoc_create(pool, 16, T);
+	test_ok("assoc_create");
+	/* Add word to assoc chain */
+	assoc_update(i->assoc, "first", "1", NIL);
+	assoc_update(i->assoc, "second", "1", NIL);
+	assoc_update(i->assoc, "third", "1", NIL);
+	test_ok("assoc_update");
+
+	if(assoc_lookup(i->assoc, "second"))
+		test_ok("assoc_lookup found");
+	else
+		test_fail("assoc_lookup found");
+
+	assoc_delete(i->assoc, "second");
+	test_ok("assoc_delete");
+
+	if(assoc_lookup(i->assoc, "second"))
+		test_fail("assoc_lookup missing");
+	else
+		test_ok("assoc_lookup missing");
+
+	pool_free(i->pool);
+
 	test_succeed();
 	test_end();
 

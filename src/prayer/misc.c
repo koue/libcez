@@ -1,4 +1,4 @@
-#include "cez-prayer.h"
+#include "cez_prayer.h"
 
 void *
 xmalloc(unsigned long size)

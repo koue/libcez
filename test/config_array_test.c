@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,19 +28,31 @@
  *
  */
 
-#ifndef _CEZ_PRAYER_H
-#define _CEZ_PRAYER_H
-
-#include <ctype.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "cez-prayer-misc.h"
+#include "cez_config.h"
+#include "cez_misc.h"
 
-#include "cez-prayer-assoc.h"
-#include "cez-prayer-pool.h"
-#include "cez-prayer-str.h"
+int main(void) {
+	char *value;
 
-#endif
+	test_start();
+
+	if (configfile_parse("./configrc", config_array_cb) == -1)
+		exit(1);
+	test_ok("configfile_parse");
+	config_array_print();
+	test_ok("config_array_print");
+	value = config_array_value_get("param4");
+	printf("param4 = %s\n", value);
+	value = config_array_value_get("param5");
+	printf("param5 = %s\n", value);
+	test_ok("config_array_value_get");
+	config_array_purge();
+	test_ok("config_array_purge");
+	test_succeed();
+	test_end();
+
+	return (0);
+}
