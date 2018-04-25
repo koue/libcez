@@ -231,8 +231,8 @@ template_compile_interface(char *prefix, struct template *template, FILE *file)
 BOOL
 template_compile(char *prefix, struct template *template, FILE *file)
 {
-    fprintf(file, "#include \"misc.h\"\n");
-    fprintf(file, "#include \"template_structs.h\"\n\n");
+    fprintf(file, "#include \"cez_prayer_misc.h\"\n");
+    fprintf(file, "#include \"cez_prayer_template_structs.h\"\n\n");
     template_compile_decls(template, file);
     template_compile_data(template, file);
     template_compile_interface(prefix, template, file);
