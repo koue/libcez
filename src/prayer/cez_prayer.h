@@ -31,16 +31,30 @@
 #ifndef _CEZ_PRAYER_H
 #define _CEZ_PRAYER_H
 
+#include <assert.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "cez_prayer_misc.h"
 
 #include "cez_prayer_assoc.h"
+#include "cez_prayer_buffer.h"
 #include "cez_prayer_pool.h"
 #include "cez_prayer_str.h"
+
+#include "cez_prayer_html.h"
+
+#include "cez_prayer_mystring.h"
+#include "cez_prayer_utf8.h"
+
+#include "cez_prayer_template_vals.h"
+#include "cez_prayer_template_fns.h"
+#include "cez_prayer_template_structs.h"
 
 #endif
