@@ -37,9 +37,12 @@ templates.a: $(O_FILES)
 _template_index.c:
 	../src/build_index.pl $(TYPE) $(T_FILES) > _template_index.c
 
-.SUFFIXES: .t
+.SUFFIXES: .t .html
 .t.c: ${.PREFIX}.t Makefile
 	$(COMPILE) $(TYPE) $@ $*
+
+.t.html: ${.PREFIX}.t Makefile common.vars ${.PREFIX}.vars
+	$(EXPAND) ${.TARGET} ${.PREFIX} common.vars ${.PREFIX}.vars
 
 clean:
 	rm -f $(TARGETS) *.html *.o *.c \#*\# *~
