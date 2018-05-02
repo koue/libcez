@@ -1,7 +1,7 @@
 #
 CC= 		cc -Wall -Wstrict-prototypes -g -O0 -static
-CFLAGS+=	-I ../../../src/prayer
-LDADD=		../../../src/prayer/libcezprayer.a
+CFLAGS+=	-I../../../../src/prayer
+LDADD=		../../../../src/prayer/libcezprayer.a
 
 all: template_expand template_compile
 

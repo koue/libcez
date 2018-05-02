@@ -1,0 +1,22 @@
+### Create new templates
+1. Use 'html' directory and TEMPLATES file as reference
+2. Create new subdirectory, e.g. 'myapp'
+	$ mkdir myapp
+3. Edit Makefile and append 'myapp' in 'TEMPLATES' list
+	$ sed -i.bak 's/TEMPLATES =.*/TEMPLATES = myapp/g' Makefile
+4. Enter 'myapp' directory
+5. Create 'common.vars' file. Use this file to define variables used in all
+   templates.
+6. Create new template file, e.g. 'mytemplate.t'
+7. Create new template's variables file, 'mytemplate.vars'. Use this file to
+   to define variables used in 'mytemplate.t' template.
+8. Create 'Makefile.deps'. Each row should contains output file and list of
+   used templates to create it.
+	mytemplate.html: mytemplate.t
+9. Create 'Makefile'. 'T_FILES' list contains all template files. 'HTML' list
+   contains all html files. Include '../share/mk/templates.mk' to use main
+   templates make file. Include 'Makefile.deps' to use output files
+   dependencies.
+10. Go one directory up and run 'make'. Use 'myapp/templates.a' in your
+   application to print the templates.
+11. Go to 'myapp' directory and run 'make test' to create sample files.
