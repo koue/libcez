@@ -1,6 +1,0 @@
-1. Add new template: 'html/newtemplate.t'
-2. Append it in 'html/Makefile' to T_FILES list
-3. Append 'newtemplate.html' in 'html/Makefile to 'HTML' list
-4. Add 'newtemplate.html' dependencies in 'html/Makefile.deps'
-5. $ make
-6. $ cd html/ && make test

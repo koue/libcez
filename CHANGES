@@ -1,3 +1,7 @@
+20180502:
+
+  Add template functions. Check 'tools/templates' directory for reference.
+
 20180416:
 
   Replace '-' with '_' in all filenames. Update cmake find module.
