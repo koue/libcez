@@ -3,7 +3,7 @@ CFLAGS  = -I../../../src/prayer
 
 TARGETS=templates.a
 
-O_FILES=_template_index.o ${T_FILES:.t=.o}
+O_FILES=../index.o _template_index.o ${T_FILES:.t=.o}
 
 C_FILES=${O_FILES:.o=.c}
 
