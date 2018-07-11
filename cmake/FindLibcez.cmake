@@ -34,10 +34,12 @@
 #  LIBCEZ_CONFIG_INCLUDE_DIR - libcez config include directory
 #  LIBCEZ_FOSSIL_INCLUDE_DIR - libcez fossil include directory
 #  LIBCEZ_MISC_INCLUDE_DIR - libcez misc include directory
+#  LIBCEZ_PRAYER_INCLUDE_DIR - libcez prayer include directory
 #
 #  LIBCEZ_CONFIG_LIBRARIES - libcez config library
 #  LIBCEZ_FOSSIL_LIBRARIES - libcez fossil library
 #  LIBCEZ_MISC_LIBRARIES - libcez misc library
+#  LIBCEZ_PRAYER_LIBRARIES - libcez prayer library
 #
 #  LIBCEZ_FOUND - libcez found
 
@@ -47,6 +49,8 @@ find_path(LIBCEZ_CONFIG_INCLUDE_DIR NAMES cez_config.h)
 find_path(LIBCEZ_FOSSIL_INCLUDE_DIR NAMES cez_fossil.h)
 # Look for libcez misc header file.
 find_path(LIBCEZ_MISC_INCLUDE_DIR NAMES cez_misc.h)
+# Look for libcez prayer header file.
+find_path(LIBCEZ_MISC_INCLUDE_DIR NAMES cez_prayer.h)
 
 # Look for libcez config library
 find_library(LIBCEZ_CONFIG_LIBRARIES NAMES cezconfig)
@@ -54,15 +58,19 @@ find_library(LIBCEZ_CONFIG_LIBRARIES NAMES cezconfig)
 find_library(LIBCEZ_FOSSIL_LIBRARIES NAMES cezfossil)
 # Look for libcez misc library
 find_library(LIBCEZ_MISC_LIBRARIES NAMES cezmisc)
+# Look for libcez prayer library
+find_library(LIBCEZ_MISC_LIBRARIES NAMES cezprayer)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Libcez DEFAULT_MSG
 			LIBCEZ_CONFIG_INCLUDE_DIR LIBCEZ_CONFIG_LIBRARIES
 			LIBCEZ_FOSSIL_INCLUDE_DIR LIBCEZ_FOSSIL_LIBRARIES
 			LIBCEZ_MISC_INCLUDE_DIR LIBCEZ_MISC_LIBRARIES
+			LIBCEZ_PRAYER_INCLUDE_DIR LIBCEZ_PRAYER_LIBRARIES
 )
 
 mark_as_advanced(LIBCEZ_CONFIG_INCLUDE_DIR LIBCEZ_CONFIG_LIBRARIES
 		LIBCEZ_FOSSIL_INCLUDE_DIR LIBCEZ_FOSSIL_LIBRARIES
 		LIBCEZ_MISC_INCLUDE_DIR LIBCEZ_MISC_LIBRARIES
+		LIBCEZ_PRAYER_INCLUDE_DIR LIBCEZ_PRAYER_LIBRARIES
 )
