@@ -1,3 +1,7 @@
+20180711:
+
+  Install files in LOCALBASE. Default is /usr/local.
+
 20180502:
 
   Add template functions. Check 'tools/templates' directory for reference.

@@ -1,5 +1,9 @@
 #
+MK_PROFILE=	no
+LOCALBASE?=	/usr/local
 LIB=            cezfossil
+LIBDIR=		${LOCALBASE}/lib
+INCSDIR=	${LOCALBASE}/include
 CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
 CFLAGS+=	-I/usr/local/include
 LDFLAGS+=	-L/usr/local/lib
