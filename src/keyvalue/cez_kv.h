@@ -38,6 +38,7 @@ struct kv {
 	RB_ENTRY(kv)		 kv_node;
 };
 
+void		 kv_init(struct kvtree *);
 struct kv	*kv_add(struct kvtree *, char *, char *);
 int		 kv_set(struct kv *, char *, ...)
 		    __attribute__((__format__ (printf, 2, 3)));
