@@ -211,4 +211,10 @@ kv_cmp(struct kv *a, struct kv *b)
 	return (strcasecmp(a->kv_key, b->kv_key));
 }
 
+void
+kv_init(struct kvtree *keys)
+{
+	RB_INIT(keys);
+}
+
 RB_GENERATE(kvtree, kv, kv_node, kv_cmp);

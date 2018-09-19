@@ -42,6 +42,7 @@ main(void){
 	struct kv	*kv, key;
 
 	test_start();
+	kv_init(&mytree);
 	key.kv_key = "root";
 	if ((kv = kv_find(&mytree, &key)) != NULL) {
 		test_fail("kv_find, not exist");
