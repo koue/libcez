@@ -125,3 +125,14 @@ char *config_array_value_get(const char *zName){
 	}
 	return (NULL);
 }
+
+const char *
+config_array_check(const char **params)
+{
+	for (int i = 0; params[i] != NULL; ++i) {
+		if (config_array_value_get(params[i]) == NULL) {
+			return (params[i]);
+		}
+	}
+	return (NULL);
+}
