@@ -28,6 +28,7 @@ void config_array_cb(const char *name, const char *value);
 void config_array_print(void);
 char *config_array_value_get(const char *name);
 void config_array_purge(void);
+const char *config_array_check(const char **params);
 
 /*
 ** CONFIG_QUEUE
@@ -36,5 +37,6 @@ void config_queue_cb(const char *name, const char *value);
 void config_queue_print(void);
 void config_queue_purge(void);
 char *config_queue_value_get(const char *name);
+const char *config_queue_check(const char **params);
 
 #endif

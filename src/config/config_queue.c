@@ -94,3 +94,14 @@ char *config_queue_value_get(const char *name) {
 	}
 	return (NULL);
 }
+
+const char *
+config_queue_check(const char **params)
+{
+	for (int i = 0; params[i] != NULL; ++i) {
+		if (config_queue_value_get(params[i]) == NULL) {
+			return (params[i]);
+		}
+	}
+	return (NULL);
+}

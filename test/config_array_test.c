@@ -35,6 +35,10 @@
 #include "cez_misc.h"
 
 int main(void) {
+	const char *paramsok[] = { "param1", "param2", "param4", NULL };
+	const char *paramsfail[] = { "param1", "param2", "param3", "param4",
+	    NULL };
+	const char *key;
 	char *value;
 
 	test_start();
@@ -42,6 +46,14 @@ int main(void) {
 	if (configfile_parse("./configrc", config_array_cb) == -1)
 		exit(1);
 	test_ok("configfile_parse");
+	if ((key = config_array_check(paramsok)) == NULL)
+		test_ok("config_array_check");
+	else
+		test_fail("config_array_check");
+	if ((key = config_array_check(paramsfail)) != NULL)
+		test_ok("config_array_check false");
+	else
+		test_fail("config_array_check false");
 	config_array_print();
 	test_ok("config_array_print");
 	value = config_array_value_get("param4");
