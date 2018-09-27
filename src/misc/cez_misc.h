@@ -12,8 +12,10 @@
 *******************************************************************************
 */
 
-#ifndef _CEZ_MISC_H
-#define _CEZ_MISC_H
+#ifndef CEZ_MISC_H
+#define CEZ_MISC_H
+
+#include <sys/time.h>
 
 /*
 ** TEST
@@ -30,6 +32,13 @@ void test_succeed(void);
 */
 void HMAC_encrypt_me(const char *zSecret, const char *zString, char **zResult);
 int HMAC_verify_me(const char *zSecret, const char *zString,
-							const char *zResult);
+    const char *zResult);
+
+/*
+** TIME
+*/
+double timelapse(struct timeval *t);
+const char *rfc822_time(time_t t);
+time_t convert_rfc822_time(const char *date);
 
 #endif
