@@ -36,7 +36,7 @@ PRAYER_DEP=	../src/prayer/cez_prayer.h \
 
 
 all: libtest jsontest cgitest configarraytest configqueuetest hmactest \
-	assoctest kvtest
+	assoctest kvtest timetest
 
 libtest: lib_test.c $(FOSSIL_DEP) $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o lib_test lib_test.c $(LDADD)
@@ -62,6 +62,9 @@ assoctest: assoc_test.c $(PRAYER_DEP) $(MISC_DEP)
 kvtest:	kv_test.c $(KV_DEP) $(MISC_DEP)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o kv_test  kv_test.c $(LDADD)
 
+timetest: time_test.c $(KV_DEP) $(MISC_DEP)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o time_test  time_test.c $(LDADD)
+
 # keep this empty otherwise installation fails
 install:
 
@@ -74,6 +77,7 @@ test:
 	./hmac_test
 	./assoc_test
 	./kv_test
+	./time_test
 
-clean:
+clean cleandir:
 	rm -f *_test *.core
