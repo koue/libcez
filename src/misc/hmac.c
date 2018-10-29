@@ -40,80 +40,79 @@
 #include "cez_misc.h"
 
 /*
-** Malloc routine.
+** HMAC encrypt string.
 */
-static void *hmac_malloc(size_t n){
-  void *p = malloc(n==0 ? 1: n);
-  if (p==0) {
-    fprintf(stderr, "out of memory");
-    exit(1);
-  }
-  return p;
-}
-
-/*
-** Duplicate a string.
-*/
-static char *hmac_strdup(const char *zOrig){
-  char *z = 0;
-  if( zOrig ){
-    int n = strlen(zOrig);
-    z = hmac_malloc(n + 1);
-    memcpy(z, zOrig, n + 1);
-  }
-  return z;
-}
-
-/*
-** HMAC encrypt string. zResult should be freed in calling function.
-**
-** char *result = NULL;
-** HMAC_encrypt_me(string, &result);
-** free(result);
-*/
-void HMAC_encrypt_me(const char *zSecret, const char *zString, char **zResult){
-  char hmac_result[64];
+void
+HMAC_encrypt_me(const char *zSecret, const char *zString, char *zResult,
+    size_t zLen){
   unsigned char *result;
   unsigned int len = 20;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX ctx;
+#else
+  HMAC_CTX *ctx = HMAC_CTX_new();
+#endif
 
   result = (unsigned char*)malloc(sizeof(char) * len);
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX_init(&ctx);
   HMAC_Init_ex(&ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
   HMAC_Update(&ctx, (unsigned char*)zString, strlen(zString));
   HMAC_Final(&ctx, result, &len);
+#else
+  HMAC_Init_ex(ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
+  HMAC_Update(ctx, (unsigned char*)zString, strlen(zString));
+  HMAC_Final(ctx, result, &len);
+#endif
 
   for (int i = 0; i < len; i++)
-    snprintf(&hmac_result[i*2], sizeof(hmac_result), "%02x",
-						(unsigned int)result[i]);
+    snprintf(&zResult[i*2], zLen, "%02x", (unsigned int)result[i]);
   free(result);
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX_cleanup(&ctx);
-  *zResult = hmac_strdup(hmac_result);
+#else
+  HMAC_CTX_free(ctx);
+#endif
 }
 
 /*
 ** HMAC verify string.
 */
-int HMAC_verify_me(const char *zSecret, const char *zString,
-							const char *zResult){
+int
+HMAC_verify_me(const char *zSecret, const char *zString, const char *zResult){
   char hmac_result[64];
   unsigned char *result;
   unsigned int len = 20;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX ctx;
+#else
+  HMAC_CTX *ctx = HMAC_CTX_new();
+#endif
 
   result = (unsigned char *)malloc(sizeof(char) * len);
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX_init(&ctx);
   HMAC_Init_ex(&ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
   HMAC_Update(&ctx, (unsigned char*)zString, strlen(zString));
   HMAC_Final(&ctx, result, &len);
+#else
+  HMAC_Init_ex(ctx, zSecret, strlen(zSecret), EVP_sha1(), NULL);
+  HMAC_Update(ctx, (unsigned char*)zString, strlen(zString));
+  HMAC_Final(ctx, result, &len);
+#endif
 
   for (int i = 0; i < len; i++)
     snprintf(&hmac_result[i*2], sizeof(hmac_result), "%02x",
-						(unsigned int)result[i]);
+      (unsigned int)result[i]);
   free(result);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
   HMAC_CTX_cleanup(&ctx);
+#else
+  HMAC_CTX_free(ctx);
+#endif
 
   return(strncmp(zResult, hmac_result, 40));
 }

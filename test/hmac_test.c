@@ -34,18 +34,15 @@
 #include "cez_misc.h"
 
 int main(void){
-	char *zHMACresult = NULL;
 	const char *string = "power overwhelming";
 /* /usr/bin/head -c 200 /dev/urandom | tr -cd '[:graph:]' | head -c 100 */
 	const char *secret =
 	"kG/+wtEm~bl7w|</vNLIa|CR6R|JO]K4(w2#!(:AHn;-}Y.Y^HL/?+F}/e),k.2cYj>{2vS";
-	char salt[128];
+	char salt[] = CEZ_HMAC_INIT;
 
 	test_start();
 
-	HMAC_encrypt_me(secret, string, &zHMACresult);
-	snprintf(salt, sizeof(salt), "%s", zHMACresult);
-	free(zHMACresult);
+	HMAC_encrypt_me(secret, string, salt, sizeof(salt));
 	test_ok("HMAC_ecnrypt_me");
 	/* HMAC_verify_me returns 0 if OK */
 	HMAC_verify_me(secret, string, salt) ? test_fail("HMAC_verify_me true") :
