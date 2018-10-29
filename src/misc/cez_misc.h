@@ -30,7 +30,9 @@ void test_succeed(void);
 /*
 ** HMAC
 */
-void HMAC_encrypt_me(const char *zSecret, const char *zString, char **zResult);
+#define CEZ_HMAC_INIT "01234567890123456789012345678901234567890123456"
+void HMAC_encrypt_me(const char *zSecret, const char *zString, char *zResult,
+    size_t zLen);
 int HMAC_verify_me(const char *zSecret, const char *zString,
     const char *zResult);
 
