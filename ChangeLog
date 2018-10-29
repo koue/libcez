@@ -1,3 +1,7 @@
+20181029:
+
+  Update HMAC functions to support OPENSSL_VERSION_NUMBER > 0x10100000L
+
 20180716:
 
   Add key-value store functions.
