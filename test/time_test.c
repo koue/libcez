@@ -31,6 +31,7 @@
 #include <stdio.h>
 
 #include "cez_misc.h"
+#include "cez_test.h"
 
 int
 main(void)
@@ -39,17 +40,9 @@ main(void)
 	static struct timeval tx;
 
 	gettimeofday(&tx, NULL);
-	test_start();
-	if (convert_rfc822_time(rfc822_time(t)) == t) {
-		test_ok("rfc822");
-	} else {
-		test_fail("rfc822");
-		goto fail;
-	}
-	printf("total %.1f ms\n", timelapse(&tx));
-	test_ok("timelapse");
-	test_succeed();
-fail:
-	test_end();
+	cez_test_start();
+	assert(convert_rfc822_time(rfc822_time(t)) == t);
+	assert(timelapse(&tx));
+
 	return (0);
 }

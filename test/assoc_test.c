@@ -29,47 +29,31 @@
  */
 
 #include "cez_prayer.h"
-
-#include "cez_misc.h"
+#include "cez_test.h"
 
 struct item {
 	struct pool *pool;	/* Allocation pool */
 	struct assoc *assoc;	/* Associative array for fast lookups */
 };
 
-int main(void){
+int
+main(void)
+{
 	struct pool *pool = pool_create(1024);
 	struct item *i;
 
-	test_start();
-
+	cez_test_start();
 	i = pool_alloc(pool, sizeof(struct item));
 	i->pool = pool;
 	i->assoc = assoc_create(pool, 16, T);
-	test_ok("assoc_create");
 	/* Add word to assoc chain */
 	assoc_update(i->assoc, "first", "1", NIL);
 	assoc_update(i->assoc, "second", "1", NIL);
 	assoc_update(i->assoc, "third", "1", NIL);
-	test_ok("assoc_update");
-
-	if(assoc_lookup(i->assoc, "second"))
-		test_ok("assoc_lookup found");
-	else
-		test_fail("assoc_lookup found");
-
+	assert(assoc_lookup(i->assoc, "second") != NULL);
 	assoc_delete(i->assoc, "second");
-	test_ok("assoc_delete");
-
-	if(assoc_lookup(i->assoc, "second"))
-		test_fail("assoc_lookup missing");
-	else
-		test_ok("assoc_lookup missing");
-
+	assert(assoc_lookup(i->assoc, "second") == NULL);
 	pool_free(i->pool);
-
-	test_succeed();
-	test_end();
 
 	return (0);
 }

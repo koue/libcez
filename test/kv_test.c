@@ -34,59 +34,24 @@
 #include <sys/types.h>
 
 #include "cez_kv.h"
-#include "cez_misc.h"
+#include "cez_test.h"
 
 int
-main(void){
+main(void)
+{
 	struct kvtree	mytree;
 	struct kv	*kv, key;
 
-	test_start();
+	cez_test_start();
 	kv_init(&mytree);
 	key.kv_key = "root";
-	if ((kv = kv_find(&mytree, &key)) != NULL) {
-		test_fail("kv_find, not exist");
-	} else {
-		test_ok("kv_find, not exist");
-	}
-	if (kv_add(&mytree, "root", "trunk") == NULL) {
-		test_fail("kv_add");
-		goto fail;
-	} else {
-		test_ok("kv_add");
-	}
-	if ((kv = kv_find(&mytree, &key)) != NULL) {
-		test_ok("kv_find");
-		printf("%20s->%s\n", kv->kv_key, kv->kv_value);
-	} else {
-		test_fail("kv_find");
-	}
-	if (kv_extend(&mytree, kv, "-major") == NULL) {
-		test_fail("kv_extend");
-		goto fail;
-	} else {
-		test_ok("kv_extend");
-		printf("%20s->%s\n", kv->kv_key, kv->kv_value);
-	}
-	if (kv_set(kv, "hollow") == -1) {
-		test_fail("kv_set");
-	} else {
-		test_ok("kv_set");
-		printf("%20s->%s\n", kv->kv_key, kv->kv_value);
-	}
-	if (kv_setkey(kv, "stub") == -1) {
-		test_fail("kv_setkey");
-	} else {
-		test_ok("kv_setkey");
-		printf("%20s->%s\n", kv->kv_key, kv->kv_value);
-	}
+	assert((kv = kv_find(&mytree, &key)) == NULL);
+	assert(kv_add(&mytree, "root", "trunk") != NULL);
+	assert((kv = kv_find(&mytree, &key)) != NULL);
+	assert(kv_extend(&mytree, kv, "-major") != NULL);
+	assert(kv_set(kv, "hollow") != -1);
+	assert(kv_setkey(kv, "stub") != -1);
 	kv_delete(&mytree, kv);
-	test_ok("kv_delete");
-
-	test_succeed();
-
-fail:
-	test_end();
 
 	return (0);
 }

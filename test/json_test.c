@@ -30,48 +30,32 @@
 
 #include "cez_fossil.h"
 #include "cez_cson_amalgamation.h"
-#include "cez_misc.h"
+#include "cez_test.h"
 
-int main(void){
-  Blob json_list = empty_blob; /* json list of github user info */
-  char *command = "cat sample.json";
-  FILE *pf;
+int
+main(void)
+{
+	Blob json_list = empty_blob; /* json list of github user info */
+	char *command = "cat sample.json";
+	FILE *pf;
+	cson_parse_opt popt = cson_parse_opt_empty;
+	cson_parse_info pinfo = cson_parse_info_empty;
+	cson_value * cson_root = NULL;
+	cson_object * cson_obj = NULL;
+	cson_value * obj_value = NULL;
 
-  test_start();
+	cez_test_start();
+	pf = popen(command, "r");
+	blob_read_from_channel(&json_list, pf, -1);
+	pclose(pf);
+	assert(cson_parse_string(&cson_root, blob_str(&json_list),
+	    strlen(blob_str(&json_list)), &popt, &pinfo) == 0);
+	assert((cson_obj = cson_value_get_object(cson_root)) != NULL);
+	assert((obj_value = cson_object_get(cson_obj, "after")) != NULL);
+	assert(cson_string_cstr(cson_value_get_string(obj_value)));
+	assert(cson_object_get(cson_obj, "notexist") == NULL);
+	cson_value_free(cson_root);
+	blob_reset(&json_list);
 
-  cson_parse_opt popt = cson_parse_opt_empty;
-  cson_parse_info pinfo = cson_parse_info_empty;
-  cson_value * cson_root = NULL;
-  cson_object * cson_obj = NULL;
-  cson_value * obj_value = NULL;
-
-  pf = popen(command, "r");
-  blob_read_from_channel(&json_list, pf, -1);
-  pclose(pf);
-
-  int rc = cson_parse_string(&cson_root, blob_str(&json_list),
-                            strlen(blob_str(&json_list)), &popt, &pinfo);
-
-  if(rc) { test_fail("json parse error"); goto done; }
-
-  cson_obj = cson_value_get_object(cson_root);
-  if(cson_obj == NULL) { test_fail("result is not object"); goto done; }
-
-  obj_value = cson_object_get(cson_obj, "after");
-  char const *after = cson_string_cstr(cson_value_get_string(obj_value));
-  test_ok(after);
-
-  obj_value = cson_object_get(cson_obj, "notexist");
-  char const *notexist = cson_string_cstr(cson_value_get_string(obj_value));
-  test_ok(notexist);
-
-  test_succeed();
-
-done:
-  cson_value_free(cson_root);
-  blob_reset(&json_list);
-
-  test_end();
-
-  return (0);
+	return (0);
 }

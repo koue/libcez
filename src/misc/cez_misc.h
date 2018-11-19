@@ -18,16 +18,6 @@
 #include <sys/time.h>
 
 /*
-** TEST
-*/
-void test_line(void);
-void test_start(void);
-void test_end(void);
-void test_ok(const char *str);
-void test_fail(const char *str);
-void test_succeed(void);
-
-/*
 ** HMAC
 */
 #define CEZ_HMAC_INIT "01234567890123456789012345678901234567890123456"

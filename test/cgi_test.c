@@ -29,39 +29,22 @@
  */
 
 #include "cez_fossil.h"
-#include "cez_misc.h"
+#include "cez_test.h"
 
-int main(void){
-  char *z;
+int
+main(void)
+{
+	char *z;
 
-  test_start();
+	cez_test_start();
+	cgi_setenv("QUERY_STRING", getenv("QUERY_STRING"));
+	assert((z = (char*)P("QUERY_STRING")) != NULL);
+	z = mprintf("%s", z);
+	add_param_list(z, '&');
+	free(z);
+	const char *p = P("show");
+	const char *s = P("go");
+	assert(p && s);
 
-  cgi_setenv("QUERY_STRING", getenv("QUERY_STRING"));
-  test_ok("cgi_setenv");
-  z = (char*)P("QUERY_STRING");
-  if( z ){
-    z = mprintf("%s", z);
-    add_param_list(z, '&');
-    test_ok("add_param_list");
-    free(z);
-  } else
-	goto fail;
-
-  const char *p = P("show");
-  const char *s = P("go");
-  if ( p && s) {
-    printf("%20d, %s, %s\n", 0, p, s);
-    test_ok("get param");
-  }
-  else {
-    test_fail("get param");
-    goto fail;
-  }
-
-  test_succeed();
-
-fail:
-  test_end();
-
-  return (0);
+	return (0);
 }
