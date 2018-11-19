@@ -29,83 +29,63 @@
  */
 
 #include "cez_fossil.h"
-#include "cez_misc.h"
+#include "cez_test.h"
 
 Global g;
 
 const char TestSchema[] =
-"CREATE TABLE tbl_test("
-" id INTEGER PRIMARY KEY,"
-" name TEXT"
-");";
+	"CREATE TABLE tbl_test("
+	" id INTEGER PRIMARY KEY,"
+	" name TEXT"
+	");";
 
 const char *dbname = "/tmp/testme-xzfadget48.db";
 const char *sqltracefile = "/tmp/testme-4trwerfsdfrf89.log";
 
 Stmt q;
 
-int main(void){
-  char command[256];
+int
+main(void)
+{
+	Blob sqltrace_list = empty_blob;
+	char command[256];
+	FILE *pf;
 
-  test_start();
+	cez_test_start();
+	/* create database */
+	db_init_database(dbname, TestSchema, (char*)0);
+	/* open database */
+	assert(sqlite3_open(dbname, &g.db) == SQLITE_OK);
+	sqlite3_trace_v2(g.db, SQLITE_TRACE_STMT, db_sql_trace, 0);
+	assert((g.sqltrace = fopen(sqltracefile, "w+")) != NULL);
+	/* insert record */
+	db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser0");
+	db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser1");
+	db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser2");
+	db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser3");
+	/* get text */
+	assert(db_text(0, "SELECT name FROM tbl_test WHERE name='testuser1'"));
+	/* get int */
+	assert(db_int(0, "SELECT id FROM tbl_test WHERE name='testuser2'"));
+	/* multiple results */
+	db_prepare(&q, "SELECT id, name FROM tbl_test");
+	while(db_step(&q)==SQLITE_ROW){
+		assert(db_column_int(&q, 0));
+		assert(strlen(db_column_text(&q, 1)));
+	}
+	db_finalize(&q);
+	sqlite3_close(g.db);
+	snprintf(command, sizeof(command), "rm %s", dbname);
+	system(command);
+	fclose(g.sqltrace);
+	snprintf(command, sizeof(command), "cat %s", sqltracefile);
+	pf = popen(command, "r");
+	blob_read_from_channel(&sqltrace_list, pf, -1);
+	pclose(pf);
+	assert(blob_str(&sqltrace_list));
+	snprintf(command, sizeof(command), "rm %s", sqltracefile);
+	system(command);
+	blob_reset(&sqltrace_list);
 
-  /* create database */
-  db_init_database(dbname, TestSchema, (char*)0);
-  test_ok("init database");
-  test_ok("create schema");
-
-  /* open database */
-  if (sqlite3_open(dbname, &g.db) != SQLITE_OK) {
-    fprintf(stderr, "Cannot open database file: %s\n", dbname);
-    return (1);
-  }
-  sqlite3_trace_v2(g.db, SQLITE_TRACE_STMT, db_sql_trace, 0);
-  if ((g.sqltrace = fopen(sqltracefile, "w+")) == NULL) {
-    fprintf(stderr, "Cannot open sql trace file: %s\n", sqltracefile);
-    sqlite3_close(g.db);
-    return (1);
-  }
-
-  /* insert record */
-  db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser0");
-  db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser1");
-  db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser2");
-  db_multi_exec("INSERT INTO tbl_test(name) VALUES (%Q)", "testuser3");
-  test_ok("insert");
-  /* get text */
-  char *zDb_text = db_text(0, "SELECT name FROM tbl_test "
-				"WHERE name='testuser1'");
-  printf("%20d, %s\n", 0, zDb_text);
-  free(zDb_text);
-  test_ok("db_text");
-  /* get int */
-  printf("%20d\n", db_int(0, "SELECT id FROM tbl_test WHERE name='testuser2'"));
-  test_ok("db_int");
-  /* multiple results */
-  db_prepare(&q, "SELECT id, name FROM tbl_test");
-  test_ok("db_prepare");
-  while(db_step(&q)==SQLITE_ROW){
-    printf("%20d, %s\n", db_column_int(&q, 0), db_column_text(&q, 1));
-  }
-  db_finalize(&q);
-  test_ok("db_step");
-  test_ok("db_finalize");
-
-  sqlite3_close(g.db);
-  snprintf(command, sizeof(command), "rm %s", dbname);
-  system(command);
-  fclose(g.sqltrace);
-  snprintf(command, sizeof(command), "echo && cat %s", sqltracefile);
-  system(command);
-  snprintf(command, sizeof(command), "rm %s", sqltracefile);
-  system(command);
-
-  printf("\n");
-  test_ok("sql_trace");
-
-  test_succeed();
-
-  test_end();
-
-  return (0);
+	return (0);
 }

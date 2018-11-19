@@ -1,3 +1,7 @@
+20181119:
+
+  Use assert() for unit testing.
+
 20181029:
 
   Update HMAC functions to support OPENSSL_VERSION_NUMBER > 0x10100000L
