@@ -33,4 +33,10 @@ double timelapse(struct timeval *t);
 const char *rfc822_time(time_t t);
 time_t convert_rfc822_time(const char *date);
 
+/*
+** URL
+*/
+const char *url_decode(char *);
+char *url_encode(const char *);
+
 #endif
