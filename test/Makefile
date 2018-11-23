@@ -7,7 +7,8 @@ PROGS=		assoc_test \
 		json_test \
 		kv_test \
 		lib_test \
-		time_test
+		time_test \
+		url_test
 
 CFLAGS=		-I../src/config \
 		-I../src/fossil \
@@ -32,6 +33,7 @@ LDADD.json_test=	-lcezfossil -lsqlite3 -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.lib_test=		-lcezfossil -lsqlite3 -lcezmisc
 LDADD.time_test=	-lcezmisc
+LDADD.url_test=		-lcezmisc
 
 MAN=
 MK_DEBUG_FILES=	no
@@ -50,5 +52,6 @@ test:
 	./assoc_test
 	./kv_test
 	./time_test
+	./url_test
 
 .include <bsd.progs.mk>

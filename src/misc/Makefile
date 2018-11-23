@@ -5,7 +5,7 @@ LIB=            cezmisc
 LIBDIR=		${LOCALBASE}/lib
 INCSDIR=	${LOCALBASE}/include
 CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
-SRCS=           hmac.c time.c cez_misc.h
+SRCS=           hmac.c time.c url.c cez_misc.h
 INCS=           cez_misc.h
 NO_OBJ=         yes
 

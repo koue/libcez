@@ -28,39 +28,26 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/queue.h>
-#include <sys/tree.h>
-#include <sys/types.h>
 
-#include "cez_kv.h"
+#include "cez_misc.h"
 #include "cez_test.h"
 
 int
 main(void)
 {
-	struct kvtree	mytree;
-	struct kv	*kv, key;
+	char *enc, dec[]="decode%21%40%23%24%25%5E%26%2A%28%29_%2Btest";
 
 	cez_test_start();
-	kv_init(&mytree);
-	key.kv_key = "root";
-	assert((kv = kv_find(&mytree, &key)) == NULL);
-	assert(kv_add(&mytree, "root", "trunk") != NULL);
-	assert((kv = kv_find(&mytree, &key)) != NULL);
-	assert(kv_extend(&mytree, kv, "-major") != NULL);
-	assert(kv_set(kv, "hollow") != -1);
-	assert(kv_setkey(kv, "stub") != -1);
-	kv_delete(&mytree, kv);
-	assert(kv_add_list(&mytree, "p1=v1;p2=v2;p3=", ';') == 0);
-	key.kv_key = "p2";
-	assert((kv = kv_find(&mytree, &key)) != NULL);
-	assert(strlen(kv->kv_value));
-	key.kv_key = "p3";
-	assert((kv = kv_find(&mytree, &key)) != NULL);
-	assert(strlen(kv->kv_value) == 0);
-	kv_purge(&mytree);
+	assert((enc = url_encode("url encode !@#$%^&*()_+;;\\\'\"/")) != NULL);
+	assert(strstr(enc, "%20") != NULL); /* ' ' */
+	assert(strstr(enc, "%25") != NULL); /* '%' */
+	free(enc);
+	assert(url_decode(dec) != NULL);
+	assert(strstr(dec, "!@#$%^&") != NULL);
 
 	return (0);
 }
