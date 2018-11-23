@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/queue.h>
 #include <sys/tree.h>
 #include <sys/types.h>
@@ -52,6 +53,14 @@ main(void)
 	assert(kv_set(kv, "hollow") != -1);
 	assert(kv_setkey(kv, "stub") != -1);
 	kv_delete(&mytree, kv);
+	assert(kv_add_list(&mytree, "p1=v1;p2=v2;p3=", ';') == 0);
+	key.kv_key = "p2";
+	assert((kv = kv_find(&mytree, &key)) != NULL);
+	assert(strlen(kv->kv_value));
+	key.kv_key = "p3";
+	assert((kv = kv_find(&mytree, &key)) != NULL);
+	assert(strlen(kv->kv_value) == 0);
+	kv_purge(&mytree);
 
 	return (0);
 }

@@ -54,6 +54,52 @@ kv_add(struct kvtree *keys, char *key, char *value)
 	return (kv);
 }
 
+static int
+kv_isspace(char c)
+{
+	return c==' ' || (c<='\r' && c>='\t');
+}
+
+int
+kv_add_list(struct kvtree *keys, char *list, int terminator)
+{
+	struct kv	*kv;
+	char		*zList, *zFree;
+
+	zFree = zList = strdup(list);
+	while (*zList) {
+		char *zName;
+		char *zValue;
+		while (kv_isspace(*zList))
+			zList++;
+		zName = zList;
+		while (*zList && *zList != '=' && *zList != terminator)
+			zList++;
+		if (*zList == '=') {
+			*zList = 0;
+			zList++;
+			zValue = zList;
+			while(*zList && *zList != terminator)
+				zList++;
+			if (*zList) {
+				*zList = 0;
+				zList++;
+			}
+		} else {
+			if (*zList)
+				*zList++ = 0;
+			zValue = "";
+		}
+		if ((kv = kv_add(keys, zName, zValue)) == NULL) {
+			free(zFree);
+			return (-1);
+		}
+	}
+	free(zFree);
+	return (0);
+}
+
+
 int
 kv_set(struct kv *kv, char *fmt, ...)
 {

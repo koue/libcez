@@ -40,6 +40,7 @@ struct kv {
 
 void		 kv_init(struct kvtree *);
 struct kv	*kv_add(struct kvtree *, char *, char *);
+int		 kv_add_list(struct kvtree *, char *, int);
 int		 kv_set(struct kv *, char *, ...)
 		    __attribute__((__format__ (printf, 2, 3)));
 int		 kv_setkey(struct kv *, char *, ...)
