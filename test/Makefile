@@ -7,6 +7,7 @@ PROGS=		assoc_test \
 		json_test \
 		kv_test \
 		lib_test \
+		queue_test \
 		time_test \
 		url_test
 
@@ -14,6 +15,7 @@ CFLAGS=		-I../src/config \
 		-I../src/fossil \
 		-I../src/keyvalue \
 		-I../src/misc \
+		-I../src/queue \
 		-I../src/prayer \
 		-I/usr/local/include
 
@@ -21,6 +23,7 @@ LDFLAGS+=	-L../src/config \
 		-L../src/fossil \
 		-L../src/keyvalue \
 		-L../src/misc \
+		-L../src/queue \
 		-L../src/prayer \
 		-L/usr/local/lib
 
@@ -32,6 +35,7 @@ LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.json_test=	-lcezfossil -lsqlite3 -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.lib_test=		-lcezfossil -lsqlite3 -lcezmisc
+LDADD.queue_test=	-lcezqueue
 LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
 
@@ -51,6 +55,7 @@ test:
 	./hmac_test
 	./assoc_test
 	./kv_test
+	./queue_test
 	./time_test
 	./url_test
 
