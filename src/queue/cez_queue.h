@@ -45,6 +45,7 @@ struct cez_queue {
 
 void cez_queue_init(struct cez_queue *queue);
 int cez_queue_add(struct cez_queue *queue, const char *name, const char *value);
+int cez_queue_add_list(struct cez_queue *queue, char *list, int terminator);
 char *cez_queue_get(struct cez_queue *queue, const char *name);
 const char *cez_queue_check(struct cez_queue *queue, const char **params);
 void cez_queue_print(struct cez_queue *queue);
