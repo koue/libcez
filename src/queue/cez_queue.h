@@ -43,6 +43,15 @@ struct cez_queue {
 	TAILQ_HEAD(, cez_queue_entry) head;
 };
 
+
+/*
+** CONFIGFILE
+*/
+extern int configfile_parse(const char *filename, struct cez_queue *queue);
+
+/*
+** QUEUE
+*/
 void cez_queue_init(struct cez_queue *queue);
 int cez_queue_add(struct cez_queue *queue, const char *name, const char *value);
 int cez_queue_add_list(struct cez_queue *queue, char *list, int terminator);

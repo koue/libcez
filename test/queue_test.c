@@ -40,23 +40,24 @@ main(void)
 {
 	struct cez_queue cgi, config;
 	static const char *params[] = { "name1", "name2", NULL };
-	static const char *list = "p1=v1;p2=v2;p3=";
+	static char *list = "p1=v1;p2=v2;p3=";
 
 	cez_test_start();
 	cez_queue_init(&cgi);
 	cez_queue_init(&config);
 	assert(cez_queue_get(&cgi, "name1") == NULL);
-	assert(cez_queue_get(&config, "name3") == NULL);
+	assert(cez_queue_get(&config, "param4") == NULL);
 	assert(cez_queue_add(&cgi, "name1", "black sheep wall") == 0);
 	assert(cez_queue_add(&cgi, "name2", "power overwhelming") == 0);
-	assert(cez_queue_add(&config, "name3", "show me the money") == 0);
+	assert(configfile_parse("./configrc", &config) == 0);
 	assert(cez_queue_check(&cgi, params) == NULL);
 	assert(cez_queue_check(&config, params) != NULL);
 	assert(cez_queue_add_list(&cgi, list, ';') == 0);
 	assert(strcmp(cez_queue_get(&cgi, "name1"), "black sheep wall") == 0);
 	assert(strcmp(cez_queue_get(&cgi, "p2"), "v2") == 0);
 	assert(strlen(cez_queue_get(&cgi, "p3")) == 0);
-	assert(strcmp(cez_queue_get(&config, "name3"), "show me the money") == 0);
+	assert(cez_queue_get(&config, "param3") == NULL);
+	assert(strcmp(cez_queue_get(&config, "param4"), "power 'overwhelming'") == 0);
 	cez_queue_purge(&cgi);
 	cez_queue_purge(&config);
 
