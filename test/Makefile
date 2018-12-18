@@ -1,8 +1,6 @@
 #
 PROGS=		assoc_test \
 		cgi_test \
-		config_array_test \
-		config_queue_test \
 		hmac_test \
 		json_test \
 		kv_test \
@@ -11,16 +9,14 @@ PROGS=		assoc_test \
 		time_test \
 		url_test
 
-CFLAGS=		-I../src/config \
-		-I../src/fossil \
+CFLAGS=		-I../src/fossil \
 		-I../src/keyvalue \
 		-I../src/misc \
 		-I../src/queue \
 		-I../src/prayer \
 		-I/usr/local/include
 
-LDFLAGS+=	-L../src/config \
-		-L../src/fossil \
+LDFLAGS+=	-L../src/fossil \
 		-L../src/keyvalue \
 		-L../src/misc \
 		-L../src/queue \
@@ -29,8 +25,6 @@ LDFLAGS+=	-L../src/config \
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
 LDADD.cgi_test=		-lcezfossil -lcezmisc
-LDADD.config_array_test=-lcezconfig -lcezmisc
-LDADD.config_queue_test=-lcezconfig -lcezmisc
 LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.json_test=	-lcezfossil -lsqlite3 -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
@@ -50,8 +44,6 @@ test:
 	./json_test
 	./lib_test
 	QUERY_STRING='show=test&go=pass' ./cgi_test
-	./config_array_test
-	./config_queue_test
 	./hmac_test
 	./assoc_test
 	./kv_test

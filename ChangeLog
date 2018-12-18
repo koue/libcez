@@ -1,3 +1,8 @@
+20181218:
+
+  Move config parse to queue directory. Remove config directory and tests. Use
+  queue functions to load configurations.
+
 20181213:
 
   Add queue functions.
