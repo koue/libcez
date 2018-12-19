@@ -58,6 +58,10 @@ main(void)
 	assert(strlen(cez_queue_get(&cgi, "p3")) == 0);
 	assert(cez_queue_get(&config, "param3") == NULL);
 	assert(strcmp(cez_queue_get(&config, "param4"), "power 'overwhelming'") == 0);
+	assert(cez_queue_update(&config, "param4", "my new value") == 0);
+	assert(strcmp(cez_queue_get(&config, "param4"), "my new value") == 0);
+	assert(cez_queue_remove(&config, "param4") == 0);
+	assert(cez_queue_get(&config, "param4") == NULL);
 	cez_queue_purge(&cgi);
 	cez_queue_purge(&config);
 
