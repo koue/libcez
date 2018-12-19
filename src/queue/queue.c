@@ -142,6 +142,41 @@ cez_queue_check(struct cez_queue *queue, const char **params)
 	return (NULL);
 }
 
+int
+cez_queue_update(struct cez_queue *queue, const char *name, const char *value)
+{
+	struct cez_queue_entry *current;
+	TAILQ_FOREACH(current, &queue->head, entry) {
+		if (strcmp(name, current->name) == 0) {
+			free(current->value);
+			if ((current->value = strdup(value)) == NULL) {
+				free(current->name);
+				free(current);
+				fprintf(stderr, "[ERROR] %s: %s\n", __func__,
+				    strerror(errno));
+				exit(1);
+			}
+		}
+	}
+	return (0);
+}
+
+int
+cez_queue_remove(struct cez_queue *queue, const char *name)
+{
+	struct cez_queue_entry *current;
+	TAILQ_FOREACH(current, &queue->head, entry) {
+		if (strcmp(name, current->name) == 0) {
+			free(current->name);
+			free(current->value);
+			TAILQ_REMOVE(&queue->head, current, entry);
+			free(current);
+			return (0);
+		}
+	}
+	return (-1);
+}
+
 void
 cez_queue_purge(struct cez_queue *queue)
 {

@@ -47,17 +47,29 @@ struct cez_queue {
 /*
 ** CONFIGFILE
 */
-extern int configfile_parse(const char *filename, struct cez_queue *queue);
+int configfile_parse(const char *filename, struct cez_queue *queue);
 
 /*
 ** QUEUE
 */
 void cez_queue_init(struct cez_queue *queue);
-int cez_queue_add(struct cez_queue *queue, const char *name, const char *value);
+#define cqi cez_queue_init
+int cez_queue_add(struct cez_queue *queue, const char *name, const char
+    *value);
+#define cqa cez_queue_add
 int cez_queue_add_list(struct cez_queue *queue, char *list, int terminator);
+#define cqal cez_queue_add_list
 char *cez_queue_get(struct cez_queue *queue, const char *name);
+#define cqg cez_queue_get
 const char *cez_queue_check(struct cez_queue *queue, const char **params);
+#define cqc cez_queue_check
+int cez_queue_update(struct cez_queue *queue, const char *name, const char
+    *value);
+#define cqu cez_queue_update
+int cez_queue_remove(struct cez_queue *queue, const char *name);
+#define cqr cez_queue_remove
 void cez_queue_print(struct cez_queue *queue);
 void cez_queue_purge(struct cez_queue *queue);
+#define cqp cez_queue_purge
 
 #endif
