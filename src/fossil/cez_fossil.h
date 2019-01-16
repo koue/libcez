@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+** Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
 ** Copyright (c) 2006 D. Richard Hipp
 **
 ** This program is free software; you can redistribute it and/or
@@ -119,21 +119,5 @@ int db_prepare_ignore_error(Stmt *pStmt, const char *zFormat, ...);
 int db_prepare(Stmt *pStmt, const char *zFormat, ...);
 void db_init_database(const char *zFileName, const char *zSchema, ...);
 int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX);
-
-/*
-** CGI
-*/
-#define P(x)		cgi_parameter((x),0)
-#define PD(x,y)		cgi_parameter((x),(y))
-
-void cgi_setenv(const char *zName, const char *zValue);
-void cgi_set_parameter_nocopy(const char *zName, const char *zValue, int isQP);
-int qparam_compare(const void *a, const void *b);
-const char *cgi_parameter(const char *zName, const char *zDefault);
-int AsciiToHex(int c);
-int dehttpize(char *z);
-void add_param_list(char *z, int terminator);
-void cgi_set_parameter(const char *zName, const char *zValue);
-void cgi_replace_parameter(const char *zName, const char *zValue);
 
 #endif

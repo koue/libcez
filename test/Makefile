@@ -1,6 +1,5 @@
 #
 PROGS=		assoc_test \
-		cgi_test \
 		hmac_test \
 		json_test \
 		kv_test \
@@ -24,7 +23,6 @@ LDFLAGS+=	-L../src/fossil \
 		-L/usr/local/lib
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
-LDADD.cgi_test=		-lcezfossil -lcezmisc
 LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.json_test=	-lcezfossil -lsqlite3 -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
@@ -43,7 +41,6 @@ install:
 test:
 	./json_test
 	./lib_test
-	QUERY_STRING='show=test&go=pass' ./cgi_test
 	./hmac_test
 	./assoc_test
 	./kv_test
