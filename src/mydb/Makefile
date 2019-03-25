@@ -1,4 +1,5 @@
 #
+MK_PROFILE=	no
 LOCALBASE?=	/usr/local
 LIB=		cezmydb
 LIBDIR=		${LOCALBASE}/lib

@@ -1,4 +1,5 @@
 #
+MK_PROFILE=	no
 LOCALBASE?=	/usr/local
 LIB=		cezqueue
 LIBDIR=		${LOCALBASE}/lib
