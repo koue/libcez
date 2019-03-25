@@ -36,8 +36,8 @@
 int
 main(void)
 {
-	struct cez_mydb *db;
-	struct cez_mydb_result *result;
+	cez_mydb *db;
+	cez_mydb_res *stmt;
 
 	cez_test_start();
 	assert((db = cez_mydb_init()) != NULL);
@@ -46,10 +46,10 @@ main(void)
 	cez_mydb_set_option(db, "password", "dbpass");
 	cez_mydb_set_option(db, "database", "dbname");
 	assert(cez_mydb_connect(db) != -1);
-	assert((result = cez_mydb_query(db, "SELECT id FROM table")) != NULL);
-	assert(cez_mydb_step(result) == 1);
-	assert(cez_mydb_int(result, 0) == 1);
-	cez_mydb_finalize(result);
+	assert((stmt = cez_mydb_query(db, "SELECT id FROM table")) != NULL);
+	assert(cez_mydb_step(stmt) == 1);
+	assert(cez_mydb_int(stmt, 0) == 1);
+	cez_mydb_finalize(stmt);
 	cez_mydb_close(db);
 
 	return (0);

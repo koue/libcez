@@ -29,65 +29,65 @@
  */
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <cez_queue.h>
 #include <cez_mydb.h>
 
-struct cez_mydb *
+cez_mydb *
 cez_mydb_init(void)
 {
-	struct cez_mydb *current;
-	if ((current = calloc(1, sizeof(*current))) == NULL) {
+	cez_mydb *db;
+
+	if ((db = calloc(1, sizeof(*db))) == NULL) {
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-	cez_queue_init(&current->config);
-	if ((current->con = mysql_init(NULL)) == NULL) {
+	cez_queue_init(&db->config);
+	if ((db->conn = mysql_init(NULL)) == NULL) {
 		return (NULL);
 	}
-	return (current);
+	return (db);
 }
 
 void
-cez_mydb_set_option(struct cez_mydb *current, const char *name,
-    const char *value)
+cez_mydb_set_option(cez_mydb *db, const char *name, const char *value)
 {
-	if (cqa(&current->config, name, value) == -1) {
+	if (cqa(&db->config, name, value) == -1) {
 		printf("%s: fail\n", __func__);
 		exit(1);
 	}
-	return;
 }
 
 int
-cez_mydb_connect(struct cez_mydb *current)
+cez_mydb_connect(cez_mydb *db)
 {
 	const char *name;
 	const char *cez_mydb_options_list[] = { "hostname", "username",
 	    "password", "database", NULL };
 
-	if ((name = cqc(&current->config, cez_mydb_options_list)) != NULL) {
-		snprintf(current->error, sizeof(current->error),
+	if ((name = cqc(&db->config, cez_mydb_options_list)) != NULL) {
+		snprintf(db->error, sizeof(db->error),
 		    "Missing option: %s", name);
 		return (-1);
 	}
-	if (mysql_real_connect(current->con, cqg(&current->config, "hostname"),
-	    cqg(&current->config, "username"), cqg(&current->config, "password"),
-	    cqg(&current->config, "database"), 0, NULL, 0) == NULL) {
-		snprintf(current->error, sizeof(current->error), "%s",
-		    mysql_error(current->con));
+	if (mysql_real_connect(db->conn, cqg(&db->config, "hostname"),
+	    cqg(&db->config, "username"), cqg(&db->config, "password"),
+	    cqg(&db->config, "database"), 0, NULL, 0) == NULL) {
+		snprintf(db->error, sizeof(db->error), "%s",
+		    mysql_error(db->conn));
 		return (-1);
 	}
 	return (0);
 }
 
-struct cez_mydb_result *
-cez_mydb_query(struct cez_mydb *current, const char *query, ...)
+cez_mydb_res *
+cez_mydb_query(cez_mydb *db, const char *query, ...)
 {
 	char *statement;
-	struct cez_mydb_result *Stmt;
+	cez_mydb_res *Stmt;
 	va_list ap;
 
 	if ((Stmt = calloc(1, sizeof(*Stmt))) == NULL) {
@@ -99,21 +99,21 @@ cez_mydb_query(struct cez_mydb *current, const char *query, ...)
 	vasprintf(&statement, query, ap);
 	va_end(ap);
 
-	if (mysql_query(current->con, statement)) {
-		snprintf(current->error, sizeof(current->error),
-		    "%s: %s", __func__, mysql_error(current->con));
+	if (mysql_query(db->conn, statement)) {
+		snprintf(db->error, sizeof(db->error),
+		    "%s: %s", __func__, mysql_error(db->conn));
 		return (NULL);
 	}
 
-	Stmt->result = mysql_store_result(current->con);
+	Stmt->res = mysql_store_result(db->conn);
 
-	if ((Stmt->result == NULL) && mysql_errno(current->con)) {
+	if ((Stmt->res == NULL) && mysql_errno(db->conn)) {
 		return (NULL);
 	}
 
-	if (Stmt->result) {
-		Stmt->numrows = mysql_num_rows(Stmt->result);
-		Stmt->numfields = mysql_num_fields(Stmt->result);
+	if (Stmt->res) {
+		Stmt->numrows = mysql_num_rows(Stmt->res);
+		Stmt->numfields = mysql_num_fields(Stmt->res);
 	} else {
 		Stmt->numfields = 0;
 		Stmt->numrows = 0;
@@ -125,36 +125,35 @@ cez_mydb_query(struct cez_mydb *current, const char *query, ...)
 }
 
 int
-cez_mydb_step(struct cez_mydb_result *current)
+cez_mydb_step(cez_mydb_res *stmt)
 {
-	if ((current->result == NULL) || (current->current == current->numrows))
+	if ((stmt->res == NULL) || (stmt->current == stmt->numrows))
 		return (0);
 
-	current->current++;
-	current->_row = mysql_fetch_row(current->result);
+	stmt->current++;
+	stmt->row = mysql_fetch_row(stmt->res);
 	return (1);
 }
 
 int
-cez_mydb_int(struct cez_mydb_result *current, int field)
+cez_mydb_int(cez_mydb_res *stmt, int field)
 {
-	if (field >= current->numfields)
+	if (field >= stmt->numfields)
 		return (0);
-	return ((int)strtol(current->_row[field], NULL, 10));
+	return ((int)strtol(stmt->row[field], NULL, 10));
 }
 
 void
-cez_mydb_finalize(struct cez_mydb_result *current)
+cez_mydb_finalize(cez_mydb_res *stmt)
 {
-	mysql_free_result(current->result);
-	free(current);
+	mysql_free_result(stmt->res);
+	free(stmt);
 }
 
 void
-cez_mydb_close(struct cez_mydb *current)
+cez_mydb_close(cez_mydb *db)
 {
-	mysql_close(current->con);
-	cez_queue_purge(&current->config);
-	free(current);
-	return;
+	mysql_close(db->conn);
+	cez_queue_purge(&db->config);
+	free(db);
 }

@@ -35,29 +35,31 @@
 #include <mysql/mysql.h>
 
 struct cez_mydb {
-	MYSQL	*con;
+	MYSQL	*conn;
 	struct	cez_queue config;
 	char	error[128];
 };
 
-struct cez_mydb_result {
-	MYSQL_RES	*result;
-	MYSQL_ROW	_row;
+typedef struct cez_mydb cez_mydb;
+
+struct cez_mydb_res {
+	MYSQL_RES	*res;
+	MYSQL_ROW	row;
 	long		numrows;
 	long		numfields;
 	long		current;
 };
 
-struct cez_mydb *cez_mydb_init(void);
-void cez_mydb_set_option(struct cez_mydb *current, const char *name,
-    const char *value);
-int cez_mydb_connect(struct cez_mydb *current);
-struct cez_mydb_result *cez_mydb_query(struct cez_mydb *current,
-    const char *query, ...);
-int cez_mydb_step(struct cez_mydb_result *current);
-int cez_mydb_int(struct cez_mydb_result *current, int field);
-void cez_mydb_finalize(struct cez_mydb_result *current);
-void cez_mydb_close(struct cez_mydb *current);
+typedef struct cez_mydb_res cez_mydb_res;
+
+cez_mydb *cez_mydb_init(void);
+void cez_mydb_set_option(cez_mydb *db, const char *name, const char *value);
+int cez_mydb_connect(cez_mydb *db);
+cez_mydb_res *cez_mydb_query(cez_mydb *db, const char *query, ...);
+int cez_mydb_step(cez_mydb_res *stmt);
+int cez_mydb_int(cez_mydb_res *stmt, int field);
+void cez_mydb_finalize(cez_mydb_res *stmt);
+void cez_mydb_close(cez_mydb *stmt);
 
 #endif
 
