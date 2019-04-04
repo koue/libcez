@@ -1,3 +1,3 @@
-SUBDIR= fossil keyvalue misc prayer queue
+SUBDIR= fossil keyvalue misc mydb prayer queue
 
 .include <bsd.subdir.mk>
