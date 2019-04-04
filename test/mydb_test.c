@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "cez_mydb.h"
 #include "cez_test.h"
@@ -46,9 +47,14 @@ main(void)
 	cez_mydb_set_option(db, "password", "dbpass");
 	cez_mydb_set_option(db, "database", "dbname");
 	assert(cez_mydb_connect(db) != -1);
+	assert(cez_mydb_exec(db, "INSERT INTO table (name) VALUES ('koue')") == 0);
 	assert((stmt = cez_mydb_query(db, "SELECT id FROM table")) != NULL);
 	assert(cez_mydb_step(stmt) == 1);
-	assert(cez_mydb_int(stmt, 0) == 1);
+	assert(cez_mydb_column_int(stmt, 0) == 1);
+	cez_mydb_finalize(stmt);
+	assert((stmt = cez_mydb_query(db, "SELECT id, name FROM table")) != NULL);
+	assert(cez_mydb_step(stmt) == 1);
+	assert(strcmp(cez_mydb_column_text(stmt, 1), "koue") == 0);
 	cez_mydb_finalize(stmt);
 	cez_mydb_close(db);
 

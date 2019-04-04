@@ -37,7 +37,7 @@
 struct cez_mydb {
 	MYSQL	*conn;
 	struct	cez_queue config;
-	char	error[128];
+	char	error[1024];
 };
 
 typedef struct cez_mydb cez_mydb;
@@ -55,9 +55,14 @@ typedef struct cez_mydb_res cez_mydb_res;
 cez_mydb *cez_mydb_init(void);
 void cez_mydb_set_option(cez_mydb *db, const char *name, const char *value);
 int cez_mydb_connect(cez_mydb *db);
+int cez_mydb_exec(cez_mydb *db, const char *zSql, ...);
 cez_mydb_res *cez_mydb_query(cez_mydb *db, const char *query, ...);
 int cez_mydb_step(cez_mydb_res *stmt);
-int cez_mydb_int(cez_mydb_res *stmt, int field);
+int cez_mydb_column_int(cez_mydb_res *stmt, int field);
+long cez_mydb_column_long(cez_mydb_res *stmt, int field);
+float cez_mydb_column_float(cez_mydb_res *stmt, int field);
+double cez_mydb_column_double(cez_mydb_res *stmt, int field);
+const char *cez_mydb_column_text(cez_mydb_res *stmt, int field);
 void cez_mydb_finalize(cez_mydb_res *stmt);
 void cez_mydb_close(cez_mydb *stmt);
 

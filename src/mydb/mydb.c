@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cez_fossil.h>
 #include <cez_queue.h>
 #include <cez_mydb.h>
 
@@ -83,34 +84,55 @@ cez_mydb_connect(cez_mydb *db)
 	return (0);
 }
 
-cez_mydb_res *
-cez_mydb_query(cez_mydb *db, const char *query, ...)
+int
+cez_mydb_exec(cez_mydb *db, const char *zSql, ...)
 {
-	char *statement;
+	Blob sql;
+	va_list ap;
+	const char *zQuery;
+	int ret;
+
+	blob_init(&sql, 0 , 0);
+	va_start(ap, zSql);
+	blob_vappendf(&sql, zSql, ap);
+	va_end(ap);
+	zQuery = blob_str(&sql);
+	if ((ret = mysql_query(db->conn, zQuery)) != 0) {
+		snprintf(db->error, sizeof(db->error),
+		    "%s: %s", __func__, mysql_error(db->conn));
+	}
+	blob_reset(&sql);
+	return (ret);
+}
+
+cez_mydb_res *
+cez_mydb_query(cez_mydb *db, const char *zSql, ...)
+{
+	Blob sql;
 	cez_mydb_res *Stmt;
 	va_list ap;
+	const char *zQuery;
 
 	if ((Stmt = calloc(1, sizeof(*Stmt))) == NULL) {
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-
-	va_start(ap, query);
-	vasprintf(&statement, query, ap);
+	blob_init(&sql, 0 , 0);
+	va_start(ap, zSql);
+	blob_vappendf(&sql, zSql, ap);
 	va_end(ap);
+	zQuery = blob_str(&sql);
 
-	if (mysql_query(db->conn, statement)) {
+	if (mysql_query(db->conn, zQuery) != 0) {
 		snprintf(db->error, sizeof(db->error),
 		    "%s: %s", __func__, mysql_error(db->conn));
-		return (NULL);
+		goto fail;
 	}
 
 	Stmt->res = mysql_store_result(db->conn);
-
 	if ((Stmt->res == NULL) && mysql_errno(db->conn)) {
-		return (NULL);
+		goto fail;
 	}
-
 	if (Stmt->res) {
 		Stmt->numrows = mysql_num_rows(Stmt->res);
 		Stmt->numfields = mysql_num_fields(Stmt->res);
@@ -119,9 +141,12 @@ cez_mydb_query(cez_mydb *db, const char *query, ...)
 		Stmt->numrows = 0;
 	}
 	Stmt->current = 0;
-	free(statement);
-
+	blob_reset(&sql);
 	return (Stmt);
+
+fail:
+	blob_reset(&sql);
+	return (NULL);
 }
 
 int
@@ -136,11 +161,43 @@ cez_mydb_step(cez_mydb_res *stmt)
 }
 
 int
-cez_mydb_int(cez_mydb_res *stmt, int field)
+cez_mydb_column_int(cez_mydb_res *stmt, int field)
 {
 	if (field >= stmt->numfields)
 		return (0);
 	return ((int)strtol(stmt->row[field], NULL, 10));
+}
+
+long
+cez_mydb_column_long(cez_mydb_res *stmt, int field)
+{
+	if (field >= stmt->numfields)
+		return (0);
+	return (strtol(stmt->row[field], NULL, 10));
+}
+
+float
+cez_mydb_column_float(cez_mydb_res *stmt, int field)
+{
+	if (field >= stmt->numfields)
+		return (0);
+	return (strtof(stmt->row[field], NULL));
+}
+
+double
+cez_mydb_column_double(cez_mydb_res *stmt, int field)
+{
+	if (field >= stmt->numfields)
+		return (0);
+	return (strtod(stmt->row[field], NULL));
+}
+
+const char *
+cez_mydb_column_text(cez_mydb_res *stmt, int field)
+{
+	if (field >= stmt->numfields)
+		return (NULL);
+	return (stmt->row[field]);
 }
 
 void
