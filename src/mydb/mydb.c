@@ -106,32 +106,24 @@ cez_mydb_exec(cez_mydb *db, const char *zSql, ...)
 }
 
 cez_mydb_res *
-cez_mydb_query(cez_mydb *db, const char *zSql, ...)
+cez_mydb_query(cez_mydb *db, const char *zSql)
 {
-	Blob sql;
 	cez_mydb_res *Stmt;
-	va_list ap;
-	const char *zQuery;
 
 	if ((Stmt = calloc(1, sizeof(*Stmt))) == NULL) {
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-	blob_init(&sql, 0 , 0);
-	va_start(ap, zSql);
-	blob_vappendf(&sql, zSql, ap);
-	va_end(ap);
-	zQuery = blob_str(&sql);
 
-	if (mysql_query(db->conn, zQuery) != 0) {
+	if (mysql_query(db->conn, zSql) != 0) {
 		snprintf(db->error, sizeof(db->error),
 		    "%s: %s", __func__, mysql_error(db->conn));
-		goto fail;
+		return (NULL);
 	}
 
 	Stmt->res = mysql_store_result(db->conn);
 	if ((Stmt->res == NULL) && mysql_errno(db->conn)) {
-		goto fail;
+		return (NULL);
 	}
 	if (Stmt->res) {
 		Stmt->numrows = mysql_num_rows(Stmt->res);
@@ -141,12 +133,84 @@ cez_mydb_query(cez_mydb *db, const char *zSql, ...)
 		Stmt->numrows = 0;
 	}
 	Stmt->current = 0;
-	blob_reset(&sql);
 	return (Stmt);
+}
 
-fail:
+cez_mydb_res *
+cez_mydb_prepare(cez_mydb *db, const char *zSql, ...)
+{
+	Blob sql;
+	cez_mydb_res *Stmt;
+	va_list ap;
+	const char *zQuery;
+
+	blob_init(&sql, 0 , 0);
+	va_start(ap, zSql);
+	blob_vappendf(&sql, zSql, ap);
+	va_end(ap);
+	zQuery = blob_str(&sql);
+
+	Stmt = cez_mydb_query(db, zQuery);
 	blob_reset(&sql);
-	return (NULL);
+	return(Stmt);
+}
+
+/*
+ * free() the result in the calling function
+ */
+char *
+cez_mydb_text(cez_mydb *db, const char *zDefault, const char *zSql, ...)
+{
+	Blob sql;
+	cez_mydb_res *Stmt;
+	va_list ap;
+	const char *zQuery;
+	char *zResult;
+
+	blob_init(&sql, 0 , 0);
+	va_start(ap, zSql);
+	blob_vappendf(&sql, zSql, ap);
+	va_end(ap);
+	zQuery = blob_str(&sql);
+
+	Stmt = cez_mydb_query(db, zQuery);
+	blob_reset(&sql);
+	if ((Stmt != NULL) && (Stmt->numrows == 1) && (Stmt->numfields == 1)
+	    && (cez_mydb_step(Stmt) == 1)) {
+		zResult = strdup(cez_mydb_column_text(Stmt, 0));
+	} else {
+		zResult = strdup(zDefault);
+	}
+	cez_mydb_finalize(Stmt);
+	return (zResult);
+}
+
+int
+cez_mydb_int(cez_mydb *db, int zDefault, const char *zSql, ...)
+{
+	Blob sql;
+	cez_mydb_res *Stmt;
+	va_list ap;
+	const char *zQuery;
+	int zResult;
+
+	blob_init(&sql, 0 , 0);
+	va_start(ap, zSql);
+	blob_vappendf(&sql, zSql, ap);
+	va_end(ap);
+	zQuery = blob_str(&sql);
+
+	Stmt = cez_mydb_query(db, zQuery);
+	blob_reset(&sql);
+	if ((Stmt != NULL) && (Stmt->numrows == 1) && (Stmt->numfields == 1)
+	    && (cez_mydb_step(Stmt) == 1)) {
+		zResult = cez_mydb_column_int(Stmt, 0);
+		cez_mydb_finalize(Stmt);
+		return (zResult);
+	} else {
+		cez_mydb_finalize(Stmt);
+		return (zDefault);
+	}
 }
 
 int
