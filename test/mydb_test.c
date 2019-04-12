@@ -29,6 +29,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "cez_mydb.h"
@@ -39,6 +40,7 @@ main(void)
 {
 	cez_mydb *db;
 	cez_mydb_res *stmt;
+	char *result;
 
 	cez_test_start();
 	assert((db = cez_mydb_init()) != NULL);
@@ -56,6 +58,17 @@ main(void)
 	assert(cez_mydb_step(stmt) == 1);
 	assert(strcmp(cez_mydb_column_text(stmt, 1), "koue") == 0);
 	cez_mydb_finalize(stmt);
+	assert(result = cez_mydb_text(db, "unknown", "SELECT name FROM table WHERE id = 1"));
+	assert(strcmp(result, "koue") == 0);
+	free(result);
+	assert(result = cez_mydb_text(db, "unknown", "SELECT id, name FROM table WHERE id = 1"));
+	assert(strcmp(result, "unknown") == 0);
+	free(result);
+	assert(result = cez_mydb_text(db, "unknown", "SELECT name FROM table WHERE id = 123"));
+	assert(strcmp(result, "unknown") == 0);
+	free(result);
+	assert(cez_mydb_int(db, 0, "SELECT id FROM table WHERE name = 'koue'") == 1);
+	assert(cez_mydb_int(db, 0, "SELECT id FROM table WHERE name = 'unknown'") == 0);
 	cez_mydb_close(db);
 
 	return (0);
