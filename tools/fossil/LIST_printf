@@ -1,0 +1,3 @@
+char *mprintf(const char *zFormat, ...)
+char *vmprintf(const char *zFormat, va_list ap)
+int vxprintf(
