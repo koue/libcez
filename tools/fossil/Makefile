@@ -13,10 +13,12 @@ grep:
 	for func in $(FUNCTIONS); do \
 		cat /dev/null > $${func}.h; \
 		cat /dev/null > $${func}.c; \
+		Y=license; \
 		while read line; do \
 			echo "$${line};" >> $${func}.h; \
-			./grep_function "$${line}" $(DIR)/src/$${func}.c >> $${func}.c; \
+			./grep_function "$${line}" $(DIR)/src/$${func}.c $${Y} >> $${func}.c; \
 			echo >> $${func}.c; \
+			Y=; \
 		done < LIST_$${func}; \
 	done;
 

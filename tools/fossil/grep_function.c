@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,21 +33,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COMMENTROWS 50	/* limit number of comment lines */
+
 void
 usage(void){
   extern char *__progname;
-  printf("Usage: %s [pattern] [file]\n", __progname);
+  printf("Usage: %s [pattern] [file] (skiplicense)\n", __progname);
   printf("Example: %s \"func(char\" src.c\n", __progname);
-  printf("Example: %s \"int func(char *str)\" src.c\n", __progname);
+  printf("Example: %s \"int func(char *str)\" src.c random\n", __progname);
   exit(1);
 }
 
 int main(int argc, char *argv[]){
   FILE *f;
-  char s[8192], head[8192];
+  char s[8192], head[8192], commentlines[COMMENTROWS][128];
   int found = 0, i, open =0, stop = 0, position, types = 0;
+  int c, row = 0, comment = 0;
 
-  if(argc!=3){
+  if (argc < 3) {
     usage();
   }
 
@@ -72,12 +75,41 @@ int main(int argc, char *argv[]){
   while (fgets(s, sizeof(s), f) && !stop) {
     char *a, *b;
 
+    if ((row == 0) && (argc > 3)) {	/* print the file license */
+      printf("%s", s);
+      if (strncmp(s, "*/", 2) == 0) {
+        printf("\n");
+        row = 1;
+      }
+    } else if (row == 0) {		/* skip license if argc < 4 */
+      row = 1;
+    }
+
+    if ((comment == 1) && (row < COMMENTROWS)) { /* comment line */
+      snprintf(commentlines[row-1], sizeof(commentlines[row-1]), "%s", s);
+      row++;
+      if (strncmp(s, "*/", 2) == 0) { /* end of comment */
+        comment = 0;
+      }
+    }
+    if ((strncmp(s, "/*", 2) == 0) && (row > 0)) {	/* start of comment */
+      comment = 1;
+      row = 1; /* clean previous comment lines, row == 0 is the file license */
+      snprintf(commentlines[row-1], sizeof(commentlines[row-1]), "%s", s);
+      row++;
+    }
+
     for (a = s; (b = strstr(a, argv[1])) != NULL;){
       if (found == 0) {	/* don't check for pattern in the function itself */
         if(a[strlen(a)-2] != 0x3B){	/* ';' check it's not prototype */
           position = b - a;	/* position of the pattern in the string */
           found = 1;			/* pattern found */
           *b = 0;
+          if (row > 1) {	/* print the function comment */
+            for (i = 0; i < row-1; i++) {
+              printf("%s", commentlines[i]);
+            }
+          }
           if (!types && !position) {	/* no types and pattern position is 0 */
             printf("%s", head);		/* print line before */
 	  } else {
