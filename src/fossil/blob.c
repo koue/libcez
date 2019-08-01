@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+** Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
 ** Copyright (c) 2006 D. Richard Hipp
 **
 ** This program is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ const Blob empty_blob = BLOB_INITIALIZER;
 char *blob_str(Blob *p){
   blob_is_init(p);
   if( p->nUsed==0 ){
-    blob_append(p, "", 1); /* NOTE: Changes nUsed. */
+    blob_append_char(p, 0); /* NOTE: Changes nUsed. */
     p->nUsed = 0;
   }
   if( p->aData[p->nUsed]!=0 ){
@@ -41,7 +41,7 @@ char *blob_str(Blob *p){
 
 /*
 ** Make sure a blob is nul-terminated and is not a pointer to unmanaged
-** space. Return a pointer to the data.
+** space.  Return a pointer to the data.
 */
 char *blob_materialize(Blob *pBlob){
   blob_resize(pBlob, pBlob->nUsed);
@@ -52,12 +52,20 @@ char *blob_materialize(Blob *pBlob){
 ** Append text or data to the end of a blob.
 */
 void blob_append(Blob *pBlob, const char *aData, int nData){
+  sqlite3_int64 nNew;
   assert( aData!=0 || nData==0 );
   blob_is_init(pBlob);
   if( nData<0 ) nData = strlen(aData);
   if( nData==0 ) return;
-  if( pBlob->nUsed + nData >= pBlob->nAlloc ){
-    pBlob->xRealloc(pBlob, pBlob->nUsed + nData + pBlob->nAlloc + 100);
+  nNew = pBlob->nUsed;
+  nNew += nData;
+  if( nNew >= pBlob->nAlloc ){
+    nNew += pBlob->nAlloc;
+    nNew += 100;
+    if( nNew>=0x7fff0000 ){
+      blob_panic();
+    }
+    pBlob->xRealloc(pBlob, (int)nNew);
     if( pBlob->nUsed + nData >= pBlob->nAlloc ){
       blob_panic();
     }
@@ -68,14 +76,30 @@ void blob_append(Blob *pBlob, const char *aData, int nData){
 }
 
 /*
-** This routine is acalled if a blob operation fails because we
+** Append a single character to the blob
+*/
+void blob_append_char(Blob *pBlob, char c){
+  if( pBlob->nUsed+1 >= pBlob->nAlloc ){
+    pBlob->xRealloc(pBlob, pBlob->nUsed + pBlob->nAlloc + 100);
+    if( pBlob->nUsed + 1 >= pBlob->nAlloc ){
+      blob_panic();
+    }
+  }
+  pBlob->aData[pBlob->nUsed++] = c;    
+}
+
+/*
+** This routine is called if a blob operation fails because we
 ** have run out of memory.
 */
-void blob_panic(void){
+static void blob_panic(void){
   static const char zErrMsg[] = "out of memory\n";
   fputs(zErrMsg, stderr);
-/*  db_close(1); */
+#if 0 /* libcez */
+  fossil_exit(1);
+#else
   exit(1);
+#endif /* libcez */
 }
 
 /*
@@ -85,7 +109,7 @@ void blob_panic(void){
 **
 ** No attempt is made to recover from an out-of-memory error.
 ** If an OOM error occurs, an error message is printed on stderr
-** and the program exists.
+** and the program exits.
 */
 void blobReallocMalloc(Blob *pBlob, unsigned int newSize){
   if( newSize==0 ){
@@ -96,8 +120,11 @@ void blobReallocMalloc(Blob *pBlob, unsigned int newSize){
     pBlob->iCursor = 0;
     pBlob->blobFlags = 0;
   }else if( newSize>pBlob->nAlloc || newSize<pBlob->nAlloc-4000 ){
-    /* char *pNew = fossil_realloc(pBlob->aData, newSize); */
+#if 0 /* libcez */
+    char *pNew = fossil_realloc(pBlob->aData, newSize);
+#else
     char *pNew = realloc(pBlob->aData, newSize);
+#endif /* libcez */
     pBlob->aData = pNew;
     pBlob->nAlloc = newSize;
     if( pBlob->nUsed>pBlob->nAlloc ){
@@ -108,7 +135,7 @@ void blobReallocMalloc(Blob *pBlob, unsigned int newSize){
 
 /*
 ** Attempt to resize a blob so that its internal buffer is
-** nByte in size. The blob is truncated if necessary.
+** nByte in size.  The blob is truncated if necessary.
 */
 void blob_resize(Blob *pBlob, unsigned int newSize){
   pBlob->xRealloc(pBlob, newSize+1);
@@ -118,14 +145,17 @@ void blob_resize(Blob *pBlob, unsigned int newSize){
 
 /*
 ** A reallocation function for when the initial string is in unmanaged
-** space. Copy the string to memory obtained from malloc().
+** space.  Copy the string to memory obtained from malloc().
 */
-void blobReallocStatic(Blob *pBlob, unsigned int newSize){
+static void blobReallocStatic(Blob *pBlob, unsigned int newSize){
   if( newSize==0 ){
     *pBlob = empty_blob;
   }else{
-    /* char *pNew = fossil_malloc( newSize ); */
+#if 0 /* libcez */
+    char *pNew = fossil_malloc( newSize );
+#else
     char *pNew = malloc( newSize );
+#endif /* libcez */
     if( pBlob->nUsed>newSize ) pBlob->nUsed = newSize;
     memcpy(pNew, pBlob->aData, pBlob->nUsed);
     pBlob->aData = pNew;
@@ -135,9 +165,9 @@ void blobReallocStatic(Blob *pBlob, unsigned int newSize){
 }
 
 /*
-** Initialize a blob to the data on an input channel. Return
-** the number of bytes read into the blob. Any prior content
-** of the blob is discarded, no freed.
+** Initialize a blob to the data on an input channel.  Return
+** the number of bytes read into the blob.  Any prior content
+** of the blob is discarded, not freed.
 */
 int blob_read_from_channel(Blob *pBlob, FILE *in, int nToRead){
   size_t n;
@@ -172,6 +202,12 @@ void blob_zero(Blob *pBlob){
   pBlob->xRealloc = blobReallocStatic;
 }
 
+/*
+** Do printf-style string rendering and append the results to a blob.
+**
+** The blob_appendf() version sets the BLOBFLAG_NotSQL bit in Blob.blobFlags
+** whereas blob_append_sql() does not.
+*/
 void blob_vappendf(Blob *pBlob, const char *zFormat, va_list ap){
   if( pBlob ) vxprintf(pBlob, zFormat, ap);
 }
@@ -201,3 +237,4 @@ void blob_init(Blob *pBlob, const char *zData, int size){
     pBlob->xRealloc = blobReallocStatic;
   }
 }
+

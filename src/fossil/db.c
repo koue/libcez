@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+** Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
 ** Copyright (c) 2006 D. Richard Hipp
 **
 ** This program is free software; you can redistribute it and/or
@@ -41,12 +41,14 @@ static struct DbLocalData {
   char *azBeforeCommit[5];  /* Commands to run prior to COMMIT */
   int nBeforeCommit;        /* Number of entries in azBeforeCommit */
   int nPriorChanges;        /* sqlite3_total_changes() at transaction start */
+  const char *zStartFile;   /* File in which transaction was started */
+  int iStartLine;           /* Line of zStartFile where transaction started */
 } db = {0, 0, 0, 0, 0, 0, };
 
 /*
-** Execute a query. Return the first column of the first row
-** of the result set as a string. Space to hold the string is
-** obtained from malloc(). If the result set is empty, return
+** Execute a query.  Return the first column of the first row
+** of the result set as a string.  Space to hold the string is
+** obtained from malloc().  If the result set is empty, return
 ** zDefault instead.
 */
 char *db_text(const char *zDefault, const char *zSql, ...){
@@ -68,15 +70,10 @@ char *db_text(const char *zDefault, const char *zSql, ...){
 }
 
 /*
-** Finalize a statement.
+** Reset or finalize a statement.
 */
 int db_finalize(Stmt *pStmt){
   int rc;
-  db_stats(pStmt);
-  blob_reset(&pStmt->sql);
-  rc = sqlite3_finalize(pStmt->pStmt);
-  db_check_result(rc);
-  pStmt->pStmt = 0;
   if( pStmt->pNext ){
     pStmt->pNext->pPrev = pStmt->pPrev;
   }
@@ -87,11 +84,16 @@ int db_finalize(Stmt *pStmt){
   }
   pStmt->pNext = 0;
   pStmt->pPrev = 0;
+  db_stats(pStmt);
+  blob_reset(&pStmt->sql);
+  rc = sqlite3_finalize(pStmt->pStmt);
+  db_check_result(rc);
+  pStmt->pStmt = 0;
   return rc;
 }
 
 /*
-** check a result code. If it is not SQLITE_OK, print the
+** Check a result code.  If it is not SQLITE_OK, print the
 ** corresponding error message and exit.
 */
 void db_check_result(int rc){
@@ -103,53 +105,43 @@ void db_check_result(int rc){
 /*
 ** Call this routine when a database error occurs.
 */
-void db_err(const char *zFormat, ...){
+static void db_err(const char *zFormat, ...){
   va_list ap;
   char *z;
-/* koue  int rc = 1; */
   va_start(ap, zFormat);
   z = vmprintf(zFormat, ap);
   va_end(ap);
-#if 0 /* koue */
+#if 0 /* libcez */
 #ifdef FOSSIL_ENABLE_JSON
   if( g.json.isJsonMode ){
     json_err( 0, z, 1 );
-    if( g.isHTTP ){
-      rc = 0 /* avoid HTTP 500 */;
-    }
   }
   else
 #endif /* FOSSIL_ENABLE_JSON */
-  if( g.xferPanic ){
+  if( g.xferPanic && g.cgiOutput==1 ){
     cgi_reset_content();
     @ error Database\serror:\s%F(z)
-      cgi_reply();
-  }
-  else if( g.cgiOutput ){
-    g.cgiOutput = 0;
-    cgi_printf("<h1>Database Error</h1>\n<p>%h</p>\n", z);
     cgi_reply();
-  }else{
-    fprintf(stderr, "%s: %s\n", g.argv[0], z);
   }
-#endif /* koue */
+  fossil_fatal("Database error: %s", z);
+#else
   fprintf(stderr, "%s: %s\n", __func__, z);
   free(z);
-/* koue  db_force_rollback(); */
   db_close(1);
   exit(1);
+#endif /* libcez */
 }
 
 /*
 ** Close the database connection.
 **
 ** Check for unfinalized statements and report errors if the reportErrors
-** argument is true. Ignore unfinalized statements when false.
+** argument is true.  Ignore unfinalized statements when false.
 */
 void db_close(int reportErrors){
   sqlite3_stmt *pStmt;
   if( g.db==0 ) return;
-#if 0 /* koue */
+#if 0 /* libcez */
   if( g.fSqlStats ){
     int cur, hiwtr;
     sqlite3_db_status(g.db, SQLITE_DBSTATUS_LOOKASIDE_USED, &cur, &hiwtr, 0);
@@ -176,15 +168,27 @@ void db_close(int reportErrors){
     fprintf(stderr, "-- PCACHE_OVFLOW          %10d %10d\n", cur, hiwtr);
     fprintf(stderr, "-- prepared statements    %10d\n", db.nPrepare);
   }
-#endif /* koue */
+#endif /* libcez */
   while( db.pAllStmt ){
     db_finalize(db.pAllStmt);
   }
-  db_end_transaction(1);
+  if( db.nBegin && reportErrors ){
+#if 0 /* libcez */
+    fossil_warning("Transaction started at %s:%d never commits",
+                   db.zStartFile, db.iStartLine);
+#else
+  fprintf(stderr, "Transaction started at %s:%d never commits\n",
+                   db.zStartFile, db.iStartLine);
+#endif /* libcez */
+    db_end_transaction(1);
+  }
   pStmt = 0;
-#if 0 /* koue */
+  g.dbIgnoreErrors++; /* Stop "database locked" warnings from PRAGMA optimize */
+  sqlite3_exec(g.db, "PRAGMA optimize", 0, 0, 0);
+  g.dbIgnoreErrors--;
+#if 0 /* libcez */
   db_close_config();
-#endif /* koue */
+#endif /* libcez */
 
   /* If the localdb has a lot of unused free space,
   ** then VACUUM it as we shut down.
@@ -201,50 +205,66 @@ void db_close(int reportErrors){
     int rc;
     sqlite3_wal_checkpoint(g.db, 0);
     rc = sqlite3_close(g.db);
+#if 0 /* libcez */
+    if( g.fSqlTrace ) fossil_trace("-- sqlite3_close(%d)\n", rc);
+#endif /* libcez */
     if( rc==SQLITE_BUSY && reportErrors ){
       while( (pStmt = sqlite3_next_stmt(g.db, pStmt))!=0 ){
-        /* koue fossil_warning("unfinalized SQL statement: [%s]", sqlite3_sql(pStmt)); */
-        fprintf(stderr, "unfinalized SQL statement: [%s]", sqlite3_sql(pStmt));
+#if 0 /* libcez */
+        fossil_warning("unfinalized SQL statement: [%s]", sqlite3_sql(pStmt));
+#else
+        fprintf(stderr, "unfinalized SQL statement: [%s]\n", sqlite3_sql(pStmt));
+#endif /* libcez */
       }
     }
     g.db = 0;
   }
-#if 0 /* koue */
+#if 0 /* libcez */
   g.repositoryOpen = 0;
   g.localOpen = 0;
   assert( g.dbConfig==0 );
   assert( g.zConfigDbName==0 );
-#endif /* koue */
+  backoffice_run_if_needed();
+#endif /* libcez */
 }
 
 /*
-** Prepare a Stmt. Assume that the Stmt is previously uninitialized.
-** If the input tring contains multiple SQL statements, only the first
-** one is processed. All statements beyond the first are silently ignored.
+** Prepare a Stmt.  Assume that the Stmt is previously uninitialized.
+** If the input string contains multiple SQL statements, only the first
+** one is processed.  All statements beyond the first are silently ignored.
 */
-int db_vprepare(Stmt *pStmt, int errOk, const char *zFormat, va_list ap){
+int db_vprepare(Stmt *pStmt, int flags, const char *zFormat, va_list ap){
   int rc;
+  int prepFlags = 0;
   char *zSql;
   blob_zero(&pStmt->sql);
   blob_vappendf(&pStmt->sql, zFormat, ap);
   va_end(ap);
   zSql = blob_str(&pStmt->sql);
   db.nPrepare++;
-  rc = sqlite3_prepare_v2(g.db, zSql, -1, &pStmt->pStmt, 0);
-  if( rc!=0 && !errOk ){
+  if( flags & DB_PREPARE_PERSISTENT ){
+    prepFlags = SQLITE_PREPARE_PERSISTENT;
+  }
+  rc = sqlite3_prepare_v3(g.db, zSql, -1, prepFlags, &pStmt->pStmt, 0);
+  if( rc!=0 && (flags & DB_PREPARE_IGNORE_ERROR)==0 ){
     db_err("%s\n%s", sqlite3_errmsg(g.db), zSql);
   }
-  pStmt->pNext = pStmt->pPrev = 0;
+  pStmt->pNext = db.pAllStmt;
+  pStmt->pPrev = 0;
+  if( db.pAllStmt ) db.pAllStmt->pPrev = pStmt;
+  db.pAllStmt = pStmt;
   pStmt->nStep = 0;
+  pStmt->rc = rc;
   return rc;
 }
 
 /*
-** Step the SQL statement. Return either SQLITE_ROW or an error code
+** Step the SQL statement.  Return either SQLITE_ROW or an error code
 ** or SQLITE_OK if the statement finishes successfully.
 */
 int db_step(Stmt *pStmt){
   int rc;
+  if( pStmt->pStmt==0 ) return pStmt->rc;
   rc = sqlite3_step(pStmt->pStmt);
   pStmt->nStep++;
   return rc;
@@ -253,7 +273,7 @@ int db_step(Stmt *pStmt){
 /*
 ** Print warnings if a query is inefficient.
 */
-void db_stats(Stmt *pStmt){
+static void db_stats(Stmt *pStmt){
 #ifdef FOSSIL_DEBUG
   int c1, c2, c3;
   const char *zSql = sqlite3_sql(pStmt->pStmt);
@@ -272,13 +292,25 @@ void db_stats(Stmt *pStmt){
 #endif
 }
 
-/*
-** End a nested transaction
+/* End a transaction previously started using db_begin_transaction()
+** or db_begin_write().
 */
 void db_end_transaction(int rollbackFlag){
   if( g.db==0 ) return;
-  if( db.nBegin<=0 ) return;
-  if( rollbackFlag ) db.doRollback = 1;
+  if( db.nBegin<=0 ){
+#if 0 /* libcez */
+    fossil_warning("Extra call to db_end_transaction");
+#else
+    fprintf(stderr, "Extra call to db_end_transaction\n");
+#endif /* libcez */
+    return;
+  }
+  if( rollbackFlag ){
+    db.doRollback = 1;
+#if 0 /* libcez */
+    if( g.fSqlTrace ) fossil_trace("-- ROLLBACK by request\n");
+#endif /* libcez */
+  }
   db.nBegin--;
   if( db.nBegin==0 ){
     int i;
@@ -290,12 +322,18 @@ void db_end_transaction(int rollbackFlag){
         sqlite3_free(db.azBeforeCommit[i]);
         i++;
       }
-/* koue
+#if 0 /* libcez */
       leaf_do_pending_checks();
-*/
+#endif /* libcez */
     }
     for(i=0; db.doRollback==0 && i<db.nCommitHook; i++){
-      db.doRollback |= db.aHook[i].xHook();
+      int rc = db.aHook[i].xHook();
+      if( rc ){
+        db.doRollback = 1;
+#if 0 /* libcez */
+        if( g.fSqlTrace ) fossil_trace("-- ROLLBACK due to aHook[%d]\n", i);
+#endif /* libcez */
+      }
     }
     while( db.pAllStmt ){
       db_finalize(db.pAllStmt);
@@ -324,6 +362,9 @@ i64 db_int64(i64 iDflt, const char *zSql, ...){
   return rc;
 }
 
+/*
+** Execute a query and return a single integer value.
+*/
 int db_int(int iDflt, const char *zSql, ...){
   va_list ap;
   Stmt s;
@@ -372,23 +413,27 @@ int db_multi_exec(const char *zSql, ...){
 }
 
 /*
-** Extract integer value from the N-th column of the
+** Extract text, integer, or blob values from the N-th column of the
 ** current row.
 */
 int db_column_int(Stmt *pStmt, int N){
   return sqlite3_column_int(pStmt->pStmt, N);
 }
 
+/*
+** Extract text, integer, or blob values from the N-th column of the
+** current row.
+*/
 i64 db_column_int64(Stmt *pStmt, int N){
   return sqlite3_column_int64(pStmt->pStmt, N);
 }
 
 /*
-** Return the slot number for database zLabel. The first database
-** opened is slot 0. The "temp" database is slot 1. Attached databases
+** Return the slot number for database zLabel.  The first database
+** opened is slot 0.  The "temp" database is slot 1.  Attached databases
 ** are slots 2 and higher.
 **
-** Return -1 if zLabel does not match any open databases.
+** Return -1 if zLabel does not match any open database.
 */
 int db_database_slot(const char *zLabel){
   int iSlot = -1;
@@ -398,8 +443,11 @@ int db_database_slot(const char *zLabel){
   rc = db_prepare_ignore_error(&q, "PRAGMA database_list");
   if( rc!=SQLITE_OK ) return iSlot;
   while( db_step(&q)==SQLITE_ROW ){
-    /* koue if( fossil_strcmp(db_column_text(&q,1),zLabel)==0 ){ */
+#if 0 /* libcez */
+    if( fossil_strcmp(db_column_text(&q,1),zLabel)==0 ){
+#else
     if( strcmp(db_column_text(&q,1),zLabel)==0 ){
+#endif /* libcez */
       iSlot = db_column_int(&q, 0);
       break;
     }
@@ -409,7 +457,7 @@ int db_database_slot(const char *zLabel){
 }
 
 /*
-** Extract text value from the N-th column of the
+** Extract text, integer, or blob values from the N-th column of the
 ** current row.
 */
 const char *db_column_text(Stmt *pStmt, int N){
@@ -417,19 +465,24 @@ const char *db_column_text(Stmt *pStmt, int N){
 }
 
 /*
-** Prepare a Stmt. Assume that the Stmt is previously uninitialized.
+** Prepare a Stmt.  Assume that the Stmt is previously uninitialized.
 ** If the input string contains multiple SQL statements, only the first
-** one is processed. All statements beyond the first are silently ignored.
+** one is processed.  All statements beyond the first are silently ignored.
 */
 int db_prepare_ignore_error(Stmt *pStmt, const char *zFormat, ...){
   int rc;
   va_list ap;
   va_start(ap, zFormat);
-  rc = db_vprepare(pStmt, 1, zFormat, ap);
+  rc = db_vprepare(pStmt, DB_PREPARE_IGNORE_ERROR, zFormat, ap);
   va_end(ap);
   return rc;
 }
 
+/*
+** Prepare a Stmt.  Assume that the Stmt is previously uninitialized.
+** If the input string contains multiple SQL statements, only the first
+** one is processed.  All statements beyond the first are silently ignored.
+*/
 int db_prepare(Stmt *pStmt, const char *zFormat, ...){
   int rc;
   va_list ap;
@@ -440,7 +493,7 @@ int db_prepare(Stmt *pStmt, const char *zFormat, ...){
 }
 
 /*
-** Initialize a new database file with the given schema. If anything
+** Initialize a new database file with the given schema.  If anything
 ** goes wrong, call db_err() to exit.
 */
 void db_init_database(
@@ -453,12 +506,14 @@ void db_init_database(
   const char *zSql;
   va_list ap;
 
-/* koue  db = db_open(zFileName); */
+#if 0 /* libcez */
+  db = db_open(zFileName);
+#else
   if (sqlite3_open(zFileName, &db) != SQLITE_OK) {
     fprintf(stderr, "Cannot open database file: %s\n", zFileName);
     exit(1);
   }
-
+#endif /* libcez */
   sqlite3_exec(db, "BEGIN EXCLUSIVE", 0, 0, 0);
   rc = sqlite3_exec(db, zSchema, 0, 0, 0);
   if( rc!=SQLITE_OK ){
@@ -476,8 +531,17 @@ void db_init_database(
   sqlite3_close(db);
 }
 
-/* sql trace */
+/*
+** SQL functions for debugging.
+**
+** The print() function writes its arguments on stdout, but only
+** if the -sqlprint command-line option is turned on.
+*/
+#if 0 /* libcez */
+LOCAL int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
+#else
 int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
+#endif /* libcez */
   sqlite3_stmt *pStmt = (sqlite3_stmt*)pP;
   char *zSql;
   int n;
@@ -485,10 +549,16 @@ int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
   if( zArg[0]=='-' ) return 0;
   zSql = sqlite3_expanded_sql(pStmt);
   n = (int)strlen(zSql);
-  if (g.sqltrace != NULL)
+#if 0 /* libcez */
+  fossil_trace("%s%s\n", zSql, (n>0 && zSql[n-1]==';') ? "" : ";");
+#else
+  if (g.sqltrace != NULL) {
     fprintf(g.sqltrace, "%s%s\n", zSql, (n>0 && zSql[n-1]==';') ? "" : ";");
-  else
+  } else {
     fprintf(stderr, "%s%s\n", zSql, (n>0 && zSql[n-1]==';') ? "" : ";");
+  }
+#endif /* libcez */
   sqlite3_free(zSql);
-  return (0);
+  return 0;
 }
+
