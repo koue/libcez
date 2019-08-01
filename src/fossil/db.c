@@ -70,6 +70,28 @@ char *db_text(const char *zDefault, const char *zSql, ...){
 }
 
 /*
+** Print warnings if a query is inefficient.
+*/
+static void db_stats(Stmt *pStmt){
+#ifdef FOSSIL_DEBUG
+  int c1, c2, c3;
+  const char *zSql = sqlite3_sql(pStmt->pStmt);
+  if( zSql==0 ) return;
+  c1 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_FULLSCAN_STEP, 1);
+  c2 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_AUTOINDEX, 1);
+  c3 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_SORT, 1);
+  if( c1>pStmt->nStep*4 && strstr(zSql,"/*scan*/")==0 ){
+    fossil_warning("%d scan steps for %d rows in [%s]", c1, pStmt->nStep, zSql);
+  }else if( c2 ){
+    fossil_warning("%d automatic index rows in [%s]", c2, zSql);
+  }else if( c3 && strstr(zSql,"/*sort*/")==0 && strstr(zSql,"/*scan*/")==0 ){
+    fossil_warning("sort w/o index in [%s]", zSql);
+  }
+  pStmt->nStep = 0;
+#endif
+}
+
+/*
 ** Reset or finalize a statement.
 */
 int db_finalize(Stmt *pStmt){
@@ -90,16 +112,6 @@ int db_finalize(Stmt *pStmt){
   db_check_result(rc);
   pStmt->pStmt = 0;
   return rc;
-}
-
-/*
-** Check a result code.  If it is not SQLITE_OK, print the
-** corresponding error message and exit.
-*/
-void db_check_result(int rc){
-  if( rc!=SQLITE_OK ){
-    db_err("SQL error: %s", sqlite3_errmsg(g.db));
-  }
 }
 
 /*
@@ -130,6 +142,16 @@ static void db_err(const char *zFormat, ...){
   db_close(1);
   exit(1);
 #endif /* libcez */
+}
+
+/*
+** Check a result code.  If it is not SQLITE_OK, print the
+** corresponding error message and exit.
+*/
+void db_check_result(int rc){
+  if( rc!=SQLITE_OK ){
+    db_err("SQL error: %s", sqlite3_errmsg(g.db));
+  }
 }
 
 /*
@@ -268,28 +290,6 @@ int db_step(Stmt *pStmt){
   rc = sqlite3_step(pStmt->pStmt);
   pStmt->nStep++;
   return rc;
-}
-
-/*
-** Print warnings if a query is inefficient.
-*/
-static void db_stats(Stmt *pStmt){
-#ifdef FOSSIL_DEBUG
-  int c1, c2, c3;
-  const char *zSql = sqlite3_sql(pStmt->pStmt);
-  if( zSql==0 ) return;
-  c1 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_FULLSCAN_STEP, 1);
-  c2 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_AUTOINDEX, 1);
-  c3 = sqlite3_stmt_status(pStmt->pStmt, SQLITE_STMTSTATUS_SORT, 1);
-  if( c1>pStmt->nStep*4 && strstr(zSql,"/*scan*/")==0 ){
-    fossil_warning("%d scan steps for %d rows in [%s]", c1, pStmt->nStep, zSql);
-  }else if( c2 ){
-    fossil_warning("%d automatic index rows in [%s]", c2, zSql);
-  }else if( c3 && strstr(zSql,"/*sort*/")==0 && strstr(zSql,"/*scan*/")==0 ){
-    fossil_warning("sort w/o index in [%s]", zSql);
-  }
-  pStmt->nStep = 0;
-#endif
 }
 
 /* End a transaction previously started using db_begin_transaction()

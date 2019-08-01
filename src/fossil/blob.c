@@ -25,6 +25,41 @@
 const Blob empty_blob = BLOB_INITIALIZER;
 
 /*
+** A reallocation function for when the initial string is in unmanaged
+** space.  Copy the string to memory obtained from malloc().
+*/
+static void blobReallocStatic(Blob *pBlob, unsigned int newSize){
+  if( newSize==0 ){
+    *pBlob = empty_blob;
+  }else{
+#if 0 /* libcez */
+    char *pNew = fossil_malloc( newSize );
+#else
+    char *pNew = malloc( newSize );
+#endif /* libcez */
+    if( pBlob->nUsed>newSize ) pBlob->nUsed = newSize;
+    memcpy(pNew, pBlob->aData, pBlob->nUsed);
+    pBlob->aData = pNew;
+    pBlob->xRealloc = blobReallocMalloc;
+    pBlob->nAlloc = newSize;
+  }
+}
+
+/*
+** This routine is called if a blob operation fails because we
+** have run out of memory.
+*/
+static void blob_panic(void){
+  static const char zErrMsg[] = "out of memory\n";
+  fputs(zErrMsg, stderr);
+#if 0 /* libcez */
+  fossil_exit(1);
+#else
+  exit(1);
+#endif /* libcez */
+}
+
+/*
 ** Return a pointer to a null-terminated string for a blob.
 */
 char *blob_str(Blob *p){
@@ -89,20 +124,6 @@ void blob_append_char(Blob *pBlob, char c){
 }
 
 /*
-** This routine is called if a blob operation fails because we
-** have run out of memory.
-*/
-static void blob_panic(void){
-  static const char zErrMsg[] = "out of memory\n";
-  fputs(zErrMsg, stderr);
-#if 0 /* libcez */
-  fossil_exit(1);
-#else
-  exit(1);
-#endif /* libcez */
-}
-
-/*
 ** A reallocation function that assumes that aData came from malloc().
 ** This function attempts to resize the buffer of the blob to hold
 ** newSize bytes.
@@ -141,27 +162,6 @@ void blob_resize(Blob *pBlob, unsigned int newSize){
   pBlob->xRealloc(pBlob, newSize+1);
   pBlob->nUsed = newSize;
   pBlob->aData[newSize] = 0;
-}
-
-/*
-** A reallocation function for when the initial string is in unmanaged
-** space.  Copy the string to memory obtained from malloc().
-*/
-static void blobReallocStatic(Blob *pBlob, unsigned int newSize){
-  if( newSize==0 ){
-    *pBlob = empty_blob;
-  }else{
-#if 0 /* libcez */
-    char *pNew = fossil_malloc( newSize );
-#else
-    char *pNew = malloc( newSize );
-#endif /* libcez */
-    if( pBlob->nUsed>newSize ) pBlob->nUsed = newSize;
-    memcpy(pNew, pBlob->aData, pBlob->nUsed);
-    pBlob->aData = pNew;
-    pBlob->xRealloc = blobReallocMalloc;
-    pBlob->nAlloc = newSize;
-  }
 }
 
 /*

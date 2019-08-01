@@ -37,6 +37,7 @@ typedef struct Blob Blob;
 struct Global {
   sqlite3 *db;
   FILE *sqltrace;
+  int dbIgnoreErrors;
 };
 extern Global g;
 
@@ -44,9 +45,6 @@ extern Global g;
 ** PRINTF
 */
 
-int hash_digits(int bForUrl);
-int et_getdigit(long double *val, int *cnt);
-int StrNLen32(const char *z, int N);
 int vxprintf(Blob *pBlob, const char *fmt, va_list ap);
 char *mprintf(const char *zFormat, ...);
 char *vmprintf(const char *zFormat, va_list ap);
@@ -99,41 +97,47 @@ struct Blob {
 
 #define BLOB_INITIALIZER  {0,0,0,0,0,blobReallocMalloc}
 
+extern const Blob empty_blob;
+
 char *blob_str(Blob *p);
 char *blob_materialize(Blob *pBlob);
 void blob_append(Blob *pBlob, const char *aData, int nData);
 void blob_append_char(Blob *pBlob, char c);
-void blob_panic(void);
 void blobReallocMalloc(Blob *pBlob, unsigned int newSize);
 void blob_resize(Blob *pBlob, unsigned int newSize);
-void blobReallocStatic(Blob *pBlob, unsigned int newSize);
 int blob_read_from_channel(Blob *pBlob, FILE *in, int nToRead);
 void blob_zero(Blob *pBlob);
 void blob_vappendf(Blob *pBlob, const char *zFormat, va_list ap);
 void blob_reset(Blob *pBlob);
 void blob_init(Blob *pBlob, const char *zData, int size);
 
+/*
+** DB
+*/
+
+/*
+** An single SQL statement is represented as an instance of the following
+** structure.
+*/
 struct Stmt {
   Blob sql;               /* The SQL for this statement */
   sqlite3_stmt *pStmt;    /* The results of sqlite3_prepare_v2() */
   Stmt *pNext, *pPrev;    /* List of all unfinalized statements */
   int nStep;              /* Number of sqlite3_step() calls */
+  int rc;                 /* Error from db_vprepare() */
 };
 
-/*
-** DB
-*/
-
 typedef sqlite3_int64 i64;
+
+#define DB_PREPARE_IGNORE_ERROR  0x001  /* Suppress errors */
+#define DB_PREPARE_PERSISTENT    0x002  /* Stmt will stick around for a while */
 
 char *db_text(const char *zDefault, const char *zSql, ...);
 int db_finalize(Stmt *pStmt);
 void db_check_result(int rc);
-void db_err(const char *zFormat, ...);
 void db_close(int reportErrors);
 int db_vprepare(Stmt *pStmt, int flags, const char *zFormat, va_list ap);
 int db_step(Stmt *pStmt);
-void db_stats(Stmt *pStmt);
 void db_end_transaction(int rollbackFlag);
 i64 db_int64(i64 iDflt, const char *zSql, ...);
 int db_int(int iDflt, const char *zSql, ...);
