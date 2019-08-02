@@ -1,3 +1,11 @@
+20190802:
+
+  Add option to disable compilation of mydb library: 'make -DNOMYDB'.
+
+20190801:
+
+  Upgrade src/fossil to version 2.9. Add 'tools/fossil' directory.
+
 20190404:
 
   Add mysql functions.
