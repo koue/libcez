@@ -4,34 +4,45 @@ PROGS=		assoc_test \
 		json_test \
 		kv_test \
 		lib_test \
-		mydb_test \
 		queue_test \
 		time_test \
 		url_test
 
+.ifndef NOMYDB
+PROGS+=		mydb_test
+.endif
+
 CFLAGS=		-I../src/fossil \
 		-I../src/keyvalue \
 		-I../src/misc \
-		-I../src/mydb \
 		-I../src/queue \
 		-I../src/prayer \
 		-I/usr/local/include
 
+.ifndef NOMYDB
+CFLAGS+=	-I../src/mydb
+.endif
+
 LDFLAGS+=	-L../src/fossil \
 		-L../src/keyvalue \
 		-L../src/misc \
-		-L../src/mydb \
 		-L../src/queue \
 		-L../src/prayer \
 		-L/usr/local/lib \
+
+.ifndef NOMYDB
+LDFLAGS+=	-L../src/mydb \
 		-L/usr/local/lib/mysql
+.endif
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
 LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.json_test=	-lcezfossil -lsqlite3 -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.lib_test=		-lcezfossil -lsqlite3 -lcezmisc
+.ifndef NOMYDB
 LDADD.mydb_test=	-lmariadb -lcezmydb -lcezfossil -lcezqueue -lcezmisc
+.endif
 LDADD.queue_test=	-lcezqueue
 LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
