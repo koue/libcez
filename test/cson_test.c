@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@
  *
  */
 
-#include "cez_fossil.h"
-#include "cez_cson_amalgamation.h"
+#include "cez_fossil_base.h"
+#include "cez_fossil_cson.h"
 #include "cez_test.h"
 
 int

@@ -20,7 +20,9 @@
 ** or binary data.
 */
 
-#include "cez_fossil.h"
+#include "cez_fossil_base.h"
+
+typedef long long int sqlite3_int64;
 
 const Blob empty_blob = BLOB_INITIALIZER;
 

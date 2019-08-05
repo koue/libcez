@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+# Copyright (c) 2018-2019 Nikola Kolev <koue@chaosophia.net>
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,13 +31,17 @@
 #
 # ::
 #
-#  LIBCEZ_FOSSIL_INCLUDE_DIR - libcez fossil include directory
+#  LIBCEZ_FOSSIL_BASE_INCLUDE_DIR - libcez fossil base include directory
+#  LIBCEZ_FOSSIL_CSON_INCLUDE_DIR - libcez fossil cson include directory
+#  LIBCEZ_FOSSIL_DB_INCLUDE_DIR - libcez fossil db include directory
 #  LIBCEZ_KV_INCLUDE_DIR - libcez key-value include directory
 #  LIBCEZ_MISC_INCLUDE_DIR - libcez misc include directory
 #  LIBCEZ_PRAYER_INCLUDE_DIR - libcez prayer include directory
 #  LIBCEZ_QUEUE_INCLUDE_DIR - libcez queue include directory
 #
-#  LIBCEZ_FOSSIL_LIBRARIES - libcez fossil library
+#  LIBCEZ_FOSSIL_BASE_LIBRARIES - libcez fossil base library
+#  LIBCEZ_FOSSIL_CSON_LIBRARIES - libcez fossil cson library
+#  LIBCEZ_FOSSIL_DB_LIBRARIES - libcez fossil db library
 #  LIBCEZ_KV_LIBRARIES - libcez key-value library
 #  LIBCEZ_MISC_LIBRARIES - libcez misc library
 #  LIBCEZ_PRAYER_LIBRARIES - libcez prayer library
@@ -45,38 +49,50 @@
 #
 #  LIBCEZ_FOUND - libcez found
 
-# Look for libcez fossil header file.
-find_path(LIBCEZ_FOSSIL_INCLUDE_DIR NAMES cez_fossil.h)
+# Look for libcez fossil base header file.
+find_path(LIBCEZ_FOSSIL_BASE_INCLUDE_DIR NAMES cez_fossil_base.h)
+# Look for libcez fossil cson header file.
+find_path(LIBCEZ_FOSSIL_CSON_INCLUDE_DIR NAMES cez_fossil_cson.h)
+# Look for libcez fossil db header file.
+find_path(LIBCEZ_FOSSIL_db_INCLUDE_DIR NAMES cez_fossil_db.h)
 # Look for libcez key-value header file.
-find_path(LIBCEZ_FOSSIL_INCLUDE_DIR NAMES cez_kv.h)
+find_path(LIBCEZ_KV_INCLUDE_DIR NAMES cez_kv.h)
 # Look for libcez misc header file.
 find_path(LIBCEZ_MISC_INCLUDE_DIR NAMES cez_misc.h)
 # Look for libcez prayer header file.
-find_path(LIBCEZ_MISC_INCLUDE_DIR NAMES cez_prayer.h)
+find_path(LIBCEZ_PRAYER_INCLUDE_DIR NAMES cez_prayer.h)
 # Look for libcez queue header file.
-find_path(LIBCEZ_MISC_INCLUDE_DIR NAMES cez_queue.h)
+find_path(LIBCEZ_QUEUE_INCLUDE_DIR NAMES cez_queue.h)
 
-# Look for libcez fossil library
-find_library(LIBCEZ_FOSSIL_LIBRARIES NAMES cezfossil)
+# Look for libcez fossil base library
+find_library(LIBCEZ_FOSSIL_BASE_LIBRARIES NAMES cezfossilbase)
+# Look for libcez fossil cson library
+find_library(LIBCEZ_FOSSIL_CSON_LIBRARIES NAMES cezfossilcson)
+# Look for libcez fossil db library
+find_library(LIBCEZ_FOSSIL_DB_LIBRARIES NAMES cezfossildb)
 # Look for libcez key-value library
-find_library(LIBCEZ_FOSSIL_LIBRARIES NAMES cezkv)
+find_library(LIBCEZ_KV_LIBRARIES NAMES cezkv)
 # Look for libcez misc library
 find_library(LIBCEZ_MISC_LIBRARIES NAMES cezmisc)
 # Look for libcez prayer library
-find_library(LIBCEZ_MISC_LIBRARIES NAMES cezprayer)
+find_library(LIBCEZ_PRAYER_LIBRARIES NAMES cezprayer)
 # Look for libcez queue library
-find_library(LIBCEZ_MISC_LIBRARIES NAMES cezqueue)
+find_library(LIBCEZ_QUEUE_LIBRARIES NAMES cezqueue)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Libcez DEFAULT_MSG
-			LIBCEZ_FOSSIL_INCLUDE_DIR LIBCEZ_FOSSIL_LIBRARIES
+			LIBCEZ_FOSSIL_BASE_INCLUDE_DIR LIBCEZ_FOSSIL_BASE_LIBRARIES
+			LIBCEZ_FOSSIL_CSON_INCLUDE_DIR LIBCEZ_FOSSIL_CSON_LIBRARIES
+			LIBCEZ_FOSSIL_DB_INCLUDE_DIR LIBCEZ_FOSSIL_DB_LIBRARIES
 			LIBCEZ_KV_INCLUDE_DIR LIBCEZ_KV_LIBRARIES
 			LIBCEZ_MISC_INCLUDE_DIR LIBCEZ_MISC_LIBRARIES
 			LIBCEZ_PRAYER_INCLUDE_DIR LIBCEZ_PRAYER_LIBRARIES
 			LIBCEZ_QUEUE_INCLUDE_DIR LIBCEZ_QUEUE_LIBRARIES
 )
 
-mark_as_advanced(LIBCEZ_FOSSIL_INCLUDE_DIR LIBCEZ_FOSSIL_LIBRARIES
+mark_as_advanced(LIBCEZ_FOSSIL_BASE_INCLUDE_DIR LIBCEZ_FOSSIL_BASE_LIBRARIES
+		LIBCEZ_FOSSIL_CSON_INCLUDE_DIR LIBCEZ_FOSSIL_CSON_LIBRARIES
+		LIBCEZ_FOSSIL_DB_INCLUDE_DIR LIBCEZ_FOSSIL_DB_LIBRARIES
 		LIBCEZ_KV_INCLUDE_DIR LIBCEZ_KV_LIBRARIES
 		LIBCEZ_MISC_INCLUDE_DIR LIBCEZ_MISC_LIBRARIES
 		LIBCEZ_PRAYER_INCLUDE_DIR LIBCEZ_PRAYER_LIBRARIES
