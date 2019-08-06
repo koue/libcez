@@ -1,16 +1,8 @@
-#
-MK_PROFILE=	no
-LOCALBASE?=	/usr/local
-LIB=            cezfossil
-LIBDIR=		${LOCALBASE}/lib
-INCSDIR=	${LOCALBASE}/include
-CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
-CFLAGS+=	-I/usr/local/include
-LDFLAGS+=	-L/usr/local/lib
-LDADD=		-lsqlite3
-SRCS=           blob.c cson_amalgamation.c db.c printf.c \
-		cez_cson_amalgamation.h cez_fossil.h
-INCS=           cez_cson_amalgamation.h cez_fossil.h
-NO_OBJ=         yes
+SUBDIR= base
 
-.include <bsd.lib.mk>
+.ifndef NOSQLITE
+# fossil cson requires sqlite
+SUBDIR+=	cson db
+.endif
+
+.include <bsd.subdir.mk>

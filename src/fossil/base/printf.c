@@ -20,9 +20,10 @@
 ** (ex: mprintf()) and for output to the console.
 */
 
-#include "cez_fossil.h"
+#include "cez_fossil_base.h"
 
-typedef sqlite3_uint64 u64;
+typedef long long int i64;
+typedef unsigned long long int u64;
 
 /* Two custom conversions are used to show a prefix of artifact hashes:
 **

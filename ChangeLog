@@ -1,3 +1,9 @@
+20190805:
+
+  Split fossil library to multiple libraries. Add option to disable compilation
+  of fossil db library: 'make -DNOSQLITE'. This option will also prevent the
+  compilation of fossil cson library because it requires SQLite.
+
 20190802:
 
   Add option to disable compilation of mydb library: 'make -DNOMYDB'.

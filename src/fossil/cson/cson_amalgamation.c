@@ -1,5 +1,5 @@
 /* auto-generated! Do not edit! */
-#include <cez_cson_amalgamation.h>
+#include <cez_fossil_cson.h>
 /* begin file parser/JSON_parser.h */
 /* See JSON_parser.c for copyright information and licensing. */
 

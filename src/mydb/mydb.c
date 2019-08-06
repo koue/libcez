@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cez_fossil.h>
+#include <cez_fossil_base.h>
 #include <cez_queue.h>
 #include <cez_mydb.h>
 
