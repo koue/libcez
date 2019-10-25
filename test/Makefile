@@ -1,8 +1,10 @@
 #
 LOCALBASE?=	/usr/local
 PROGS=		assoc_test \
+		blob_test \
 		hmac_test \
 		kv_test \
+		printf_test \
 		queue_test \
 		time_test \
 		url_test
@@ -20,8 +22,10 @@ LDFLAGS+=	-L../src/fossil/base \
 		-L../src/prayer
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
+LDADD.blob_test=	-lcezfossilbase -lcezmisc
 LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
+LDADD.printf_test=	-lcezfossilbase -lcezmisc
 LDADD.queue_test=	-lcezqueue
 LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
@@ -57,6 +61,7 @@ install:
 
 test:
 	./assoc_test
+	./blob_test
 .ifndef NOSQLITE
 	./cson_test
 	./db_test
@@ -64,6 +69,7 @@ test:
 	./hmac_test
 	./kv_test
 #	./mydb_test
+	./printf_test
 	./queue_test
 	./time_test
 	./url_test
