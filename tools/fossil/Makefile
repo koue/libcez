@@ -1,8 +1,8 @@
-VERSION=2.9
+VERSION=2.10
 URL=https://www.fossil-scm.org/home/uv/
 PACKAGE=fossil-src-$(VERSION).tar.gz
 DIR=fossil-$(VERSION)
-FUNCTIONS=blob db printf
+FUNCTIONS=blob db printf util
 
 all: compile fetch extract grep
 

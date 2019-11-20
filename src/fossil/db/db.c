@@ -93,29 +93,6 @@ static void db_stats(Stmt *pStmt){
 }
 
 /*
-** Reset or finalize a statement.
-*/
-int db_finalize(Stmt *pStmt){
-  int rc;
-  if( pStmt->pNext ){
-    pStmt->pNext->pPrev = pStmt->pPrev;
-  }
-  if( pStmt->pPrev ){
-    pStmt->pPrev->pNext = pStmt->pNext;
-  }else if( db.pAllStmt==pStmt ){
-    db.pAllStmt = pStmt->pNext;
-  }
-  pStmt->pNext = 0;
-  pStmt->pPrev = 0;
-  db_stats(pStmt);
-  blob_reset(&pStmt->sql);
-  rc = sqlite3_finalize(pStmt->pStmt);
-  db_check_result(rc);
-  pStmt->pStmt = 0;
-  return rc;
-}
-
-/*
 ** Call this routine when a database error occurs.
 */
 static void db_err(const char *zFormat, ...){
@@ -149,10 +126,35 @@ static void db_err(const char *zFormat, ...){
 ** Check a result code.  If it is not SQLITE_OK, print the
 ** corresponding error message and exit.
 */
-void db_check_result(int rc){
+static void db_check_result(int rc, Stmt *pStmt){
   if( rc!=SQLITE_OK ){
-    db_err("SQL error: %s", sqlite3_errmsg(g.db));
+    db_err("SQL error (%d,%d: %s) while running [%s]",
+       rc, sqlite3_extended_errcode(g.db),
+       sqlite3_errmsg(g.db), blob_str(&pStmt->sql));
   }
+}
+
+/*
+** Reset or finalize a statement.
+*/
+int db_finalize(Stmt *pStmt){
+  int rc;
+  if( pStmt->pNext ){
+    pStmt->pNext->pPrev = pStmt->pPrev;
+  }
+  if( pStmt->pPrev ){
+    pStmt->pPrev->pNext = pStmt->pNext;
+  }else if( db.pAllStmt==pStmt ){
+    db.pAllStmt = pStmt->pNext;
+  }
+  pStmt->pNext = 0;
+  pStmt->pPrev = 0;
+  db_stats(pStmt);
+  blob_reset(&pStmt->sql);
+  rc = sqlite3_finalize(pStmt->pStmt);
+  db_check_result(rc, pStmt);
+  pStmt->pStmt = 0;
+  return rc;
 }
 
 /*
@@ -496,6 +498,9 @@ int db_prepare(Stmt *pStmt, const char *zFormat, ...){
 /*
 ** Initialize a new database file with the given schema.  If anything
 ** goes wrong, call db_err() to exit.
+**
+** If zFilename is NULL, then create an empty repository in an in-memory
+** database.
 */
 void db_init_database(
   const char *zFileName,   /* Name of database file to create */
@@ -508,7 +513,7 @@ void db_init_database(
   va_list ap;
 
 #if 0 /* libcez */
-  db = db_open(zFileName);
+  db = db_open(zFileName ? zFileName : ":memory:");
 #else
   if (sqlite3_open(zFileName, &db) != SQLITE_OK) {
     fprintf(stderr, "Cannot open database file: %s\n", zFileName);
@@ -529,7 +534,15 @@ void db_init_database(
   }
   va_end(ap);
   sqlite3_exec(db, "COMMIT", 0, 0, 0);
+#if 0 /* libcez */
+  if( zFileName || g.db!=0 ){
+    sqlite3_close(db);
+  }else{
+    g.db = db;
+  }
+#else
   sqlite3_close(db);
+#endif /* libcez */
 }
 
 /*
