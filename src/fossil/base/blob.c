@@ -34,11 +34,7 @@ static void blobReallocStatic(Blob *pBlob, unsigned int newSize){
   if( newSize==0 ){
     *pBlob = empty_blob;
   }else{
-#if 0 /* libcez */
     char *pNew = fossil_malloc( newSize );
-#else
-    char *pNew = malloc( newSize );
-#endif /* libcez */
     if( pBlob->nUsed>newSize ) pBlob->nUsed = newSize;
     memcpy(pNew, pBlob->aData, pBlob->nUsed);
     pBlob->aData = pNew;
@@ -70,7 +66,9 @@ char *blob_str(Blob *p){
     blob_append_char(p, 0); /* NOTE: Changes nUsed. */
     p->nUsed = 0;
   }
-  if( p->aData[p->nUsed]!=0 ){
+  if( p->nUsed<p->nAlloc ){
+    p->aData[p->nUsed] = 0;
+  }else{
     blob_materialize(p);
   }
   return p->aData;
@@ -87,8 +85,15 @@ char *blob_materialize(Blob *pBlob){
 
 /*
 ** Append text or data to the end of a blob.
+**
+** The blob_append_full() routine is a complete implementation.
+** The blob_append() routine only works for cases where nData>0 and
+** no resizing is required, and falls back to blob_append_full() if
+** either condition is not met, but runs faster in the common case
+** where all conditions are met.  The use of blob_append() is
+** recommended, unless it is known in advance that nData<0.
 */
-void blob_append(Blob *pBlob, const char *aData, int nData){
+void blob_append_full(Blob *pBlob, const char *aData, int nData){
   sqlite3_int64 nNew;
   assert( aData!=0 || nData==0 );
   blob_is_init(pBlob);
@@ -113,16 +118,38 @@ void blob_append(Blob *pBlob, const char *aData, int nData){
 }
 
 /*
+** Append text or data to the end of a blob.
+**
+** The blob_append_full() routine is a complete implementation.
+** The blob_append() routine only works for cases where nData>0 and
+** no resizing is required, and falls back to blob_append_full() if
+** either condition is not met, but runs faster in the common case
+** where all conditions are met.  The use of blob_append() is
+** recommended, unless it is known in advance that nData<0.
+*/
+void blob_append(Blob *pBlob, const char *aData, int nData){
+  sqlite3_int64 nUsed;
+  assert( aData!=0 || nData==0 );
+  /* blob_is_init(pBlob); // omitted for speed */
+  if( nData<=0 || pBlob->nUsed + nData >= pBlob->nAlloc ){
+    blob_append_full(pBlob, aData, nData);
+    return;
+  }
+  nUsed = pBlob->nUsed;
+  pBlob->nUsed += nData;
+  pBlob->aData[pBlob->nUsed] = 0;
+  memcpy(&pBlob->aData[nUsed], aData, nData);
+}
+
+/*
 ** Append a single character to the blob
 */
 void blob_append_char(Blob *pBlob, char c){
   if( pBlob->nUsed+1 >= pBlob->nAlloc ){
-    pBlob->xRealloc(pBlob, pBlob->nUsed + pBlob->nAlloc + 100);
-    if( pBlob->nUsed + 1 >= pBlob->nAlloc ){
-      blob_panic();
-    }
+    blob_append_full(pBlob, &c, 1);
+  }else{
+    pBlob->aData[pBlob->nUsed++] = c;
   }
-  pBlob->aData[pBlob->nUsed++] = c;    
 }
 
 /*
@@ -143,11 +170,7 @@ void blobReallocMalloc(Blob *pBlob, unsigned int newSize){
     pBlob->iCursor = 0;
     pBlob->blobFlags = 0;
   }else if( newSize>pBlob->nAlloc || newSize<pBlob->nAlloc-4000 ){
-#if 0 /* libcez */
     char *pNew = fossil_realloc(pBlob->aData, newSize);
-#else
-    char *pNew = realloc(pBlob->aData, newSize);
-#endif /* libcez */
     pBlob->aData = pNew;
     pBlob->nAlloc = newSize;
     if( pBlob->nUsed>pBlob->nAlloc ){

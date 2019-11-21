@@ -625,11 +625,7 @@ int vxprintf(
         char *e = va_arg(ap,char*);
         if( e==0 ){e="";}
         length = StrNLen32(e, limit);
-#if 0 /* libcez */
         zExtra = bufpt = fossil_malloc(length+1);
-#else
-        zExtra = bufpt = malloc(length+1);
-#endif /* libcez */
         for( i=0; i<length; i++ ){
           if( e[i]=='\\' ){
             bufpt[i]='/';
@@ -682,11 +678,7 @@ int vxprintf(
         if( limit>=0 && limit<n ) n = limit;
         for(cnt=i=0; i<n; i++){ if( zOrig[i]=='\'' ) cnt++; }
         if( n+cnt+2 > etBUFSIZE ){
-#if 0 /* libcez */
           bufpt = zExtra = fossil_malloc( n + cnt + 2 );
-#else
-          bufpt = zExtra = malloc( n + cnt + 2 );
-#endif /* libcez */
         }else{
           bufpt = buf;
         }
@@ -717,11 +709,7 @@ int vxprintf(
         needQuote = !isnull && xtype==etSQLESCAPE2;
         n += i + 1 + needQuote*2;
         if( n>etBUFSIZE ){
-#if 0 /* libcez */
           bufpt = zExtra = fossil_malloc( n );
-#else
-          bufpt = zExtra = malloc( n );
-#endif /* libcez */
         }else{
           bufpt = buf;
         }
@@ -843,11 +831,7 @@ int vxprintf(
       }
     }
     if( zExtra ){
-#if 0 /* libcez */
       fossil_free(zExtra);
-#else
-      free(zExtra);
-#endif /* libcez */
     }
   }/* End for loop over the format string */
   return errorflag ? -1 : count;

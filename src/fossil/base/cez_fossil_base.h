@@ -91,6 +91,7 @@ extern const Blob empty_blob;
 
 char *blob_str(Blob *p);
 char *blob_materialize(Blob *pBlob);
+void blob_append_full(Blob *pBlob, const char *aData, int nData);
 void blob_append(Blob *pBlob, const char *aData, int nData);
 void blob_append_char(Blob *pBlob, char c);
 void blobReallocMalloc(Blob *pBlob, unsigned int newSize);
@@ -100,5 +101,13 @@ void blob_zero(Blob *pBlob);
 void blob_vappendf(Blob *pBlob, const char *zFormat, va_list ap);
 void blob_reset(Blob *pBlob);
 void blob_init(Blob *pBlob, const char *zData, int size);
+
+/*
+** UTIL
+*/
+void fossil_panic(const char *c);
+void *fossil_malloc(size_t n);
+void fossil_free(void *p);
+void *fossil_realloc(void *p, size_t n);
 
 #endif
