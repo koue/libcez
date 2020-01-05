@@ -7,19 +7,22 @@ PROGS=		assoc_test \
 		printf_test \
 		queue_test \
 		time_test \
-		url_test
+		url_test \
+		util_test
 
 CFLAGS=		-I../src/fossil/base \
 		-I../src/keyvalue \
 		-I../src/misc \
 		-I../src/queue \
 		-I../src/prayer \
+		-I../src/util
 
 LDFLAGS+=	-L../src/fossil/base \
 		-L../src/keyvalue \
 		-L../src/misc \
 		-L../src/queue \
-		-L../src/prayer
+		-L../src/prayer \
+		-L../src/util
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
 LDADD.blob_test=	-lcezfossilbase -lcezmisc
@@ -29,6 +32,7 @@ LDADD.printf_test=	-lcezfossilbase -lcezmisc
 LDADD.queue_test=	-lcezqueue
 LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
+LDADD.util_test=	-lcezutil
 
 .ifndef NOSQLITE
 # fossil cson requires sqlite
@@ -73,5 +77,6 @@ test:
 	./queue_test
 	./time_test
 	./url_test
+	./util_test
 
 .include <bsd.progs.mk>

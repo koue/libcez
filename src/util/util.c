@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,38 +28,53 @@
  *
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "cez_queue.h"
-#include "cez_test.h"
+#include "cez_util.h"
 
 int
-main(void)
+cez_util_isspace(char c)
 {
-	struct cez_queue cgi, config;
-	static const char *params[] = { "name1", "name2", NULL };
+	return c==' ' || (c<='\r' && c>='\t');
+}
 
-	cez_test_start();
-	cez_queue_init(&cgi);
-	cez_queue_init(&config);
-	assert(cez_queue_get(&cgi, "name1") == NULL);
-	assert(cez_queue_get(&config, "param4") == NULL);
-	assert(cez_queue_add(&cgi, "name1", "black sheep wall") == 0);
-	assert(cez_queue_add(&cgi, "name2", "power overwhelming") == 0);
-	assert(configfile_parse("./configrc", &config) == 0);
-	assert(cez_queue_check(&cgi, params) == NULL);
-	assert(cez_queue_check(&config, params) != NULL);
-	assert(strcmp(cez_queue_get(&cgi, "name1"), "black sheep wall") == 0);
-	assert(cez_queue_get(&config, "param3") == NULL);
-	assert(strcmp(cez_queue_get(&config, "param4"), "power 'overwhelming'") == 0);
-	assert(cez_queue_update(&config, "param4", "my new value") == 0);
-	assert(strcmp(cez_queue_get(&config, "param4"), "my new value") == 0);
-	assert(cez_queue_remove(&config, "param4") == 0);
-	assert(cez_queue_get(&config, "param4") == NULL);
-	cez_queue_purge(&cgi);
-	cez_queue_purge(&config);
+int
+cez_util_param_list(const char *list, int terminator, int (*fn)(const char *name,
+    const char *value))
+{
+	char *zList, *zFree;
 
+	zFree = zList = strdup(list);
+	while (*zList) {
+		char *zName;
+		char *zValue;
+		while (cez_util_isspace(*zList))
+			zList++;
+		zName = zList;
+		while (*zList && *zList != '=' && *zList != terminator)
+			zList++;
+		if (*zList == '=') {
+			*zList = 0;
+			zList++;
+			zValue = zList;
+			while(*zList && *zList != terminator)
+				zList++;
+			if (*zList) {
+				*zList = 0;
+				zList++;
+			}
+		} else {
+			if (*zList)
+				*zList++ = 0;
+			zValue = "";
+		}
+		if (fn(zName, zValue) != 0) {
+			free(zFree);
+			return (-1);
+		}
+	}
+	free(zFree);
 	return (0);
 }
+

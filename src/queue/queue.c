@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,51 +63,6 @@ cez_queue_add(struct cez_queue *queue, const char *name, const char *value)
 	TAILQ_INSERT_TAIL(&queue->head, current, entry);
 	return (0);
 }
-
-static int
-cez_queue_isspace(char c)
-{
-	return c==' ' || (c<='\r' && c>='\t');
-}
-
-int
-cez_queue_add_list(struct cez_queue *queue, char *list, int terminator)
-{
-	char *zList, *zFree;
-
-	zFree = zList = strdup(list);
-	while (*zList) {
-		char *zName;
-		char *zValue;
-		while (cez_queue_isspace(*zList))
-			zList++;
-		zName = zList;
-		while (*zList && *zList != '=' && *zList != terminator)
-			zList++;
-		if (*zList == '=') {
-			*zList = 0;
-			zList++;
-			zValue = zList;
-			while(*zList && *zList != terminator)
-				zList++;
-			if (*zList) {
-				*zList = 0;
-				zList++;
-			}
-		} else {
-			if (*zList)
-				*zList++ = 0;
-			zValue = "";
-		}
-		if (cez_queue_add(queue, zName, zValue) != 0) {
-			free(zFree);
-			return (-1);
-		}
-	}
-	free(zFree);
-	return (0);
-}
-
 
 char *
 cez_queue_get(struct cez_queue *queue, const char *name)

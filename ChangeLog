@@ -1,3 +1,7 @@
+20200105:
+
+  Add util functions.
+
 20191120:
 
   Upgrade src/fossil to version 2.10. Add 'fossil/base/util.c'.
