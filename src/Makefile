@@ -1,4 +1,4 @@
-SUBDIR= fossil keyvalue misc prayer queue util
+SUBDIR= cgi fossil keyvalue misc prayer queue util
 
 .ifndef NOMYDB
 SUBDIR+= mydb

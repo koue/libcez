@@ -2,6 +2,7 @@
 LOCALBASE?=	/usr/local
 PROGS=		assoc_test \
 		blob_test \
+		cgi_test \
 		hmac_test \
 		kv_test \
 		printf_test \
@@ -10,14 +11,16 @@ PROGS=		assoc_test \
 		url_test \
 		util_test
 
-CFLAGS=		-I../src/fossil/base \
+CFLAGS=		-I../src/cgi \
+		-I../src/fossil/base \
 		-I../src/keyvalue \
 		-I../src/misc \
 		-I../src/queue \
 		-I../src/prayer \
 		-I../src/util
 
-LDFLAGS+=	-L../src/fossil/base \
+LDFLAGS+=	-L../src/cgi \
+		-L../src/fossil/base \
 		-L../src/keyvalue \
 		-L../src/misc \
 		-L../src/queue \
@@ -26,6 +29,7 @@ LDFLAGS+=	-L../src/fossil/base \
 
 LDADD.assoc_test=	-lcezprayer -lcezmisc
 LDADD.blob_test=	-lcezfossilbase -lcezmisc
+LDADD.cgi_test=		-lcezcgi -lcezprayer
 LDADD.hmac_test=	-lcrypto -lcezmisc
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.printf_test=	-lcezfossilbase -lcezmisc
@@ -66,6 +70,7 @@ install:
 test:
 	./assoc_test
 	./blob_test
+	./cgi_test
 .ifndef NOSQLITE
 	./cson_test
 	./db_test
