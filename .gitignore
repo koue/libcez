@@ -1,3 +1,4 @@
+*.core
 *.o
 *.a
-test/*_test
+*_test

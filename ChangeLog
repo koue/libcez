@@ -1,3 +1,7 @@
+20200403:
+
+  Add more prayer functions. 'make -DNOSSL' to disable SSL support.
+
 20200105:
 
   Add util functions.

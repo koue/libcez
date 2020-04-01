@@ -1,7 +1,8 @@
 #
+SUBDIR=	prayer
+
 LOCALBASE?=	/usr/local
-PROGS=		assoc_test \
-		blob_test \
+PROGS=		blob_test \
 		cgi_test \
 		hmac_test \
 		kv_test \
@@ -27,16 +28,21 @@ LDFLAGS+=	-L../src/cgi \
 		-L../src/prayer \
 		-L../src/util
 
-LDADD.assoc_test=	-lcezprayer -lcezmisc
 LDADD.blob_test=	-lcezfossilbase -lcezmisc
 LDADD.cgi_test=		-lcezcgi -lcezprayer
-LDADD.hmac_test=	-lcrypto -lcezmisc
+LDADD.hmac_test=	-lcezmisc -lcrypto
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.printf_test=	-lcezfossilbase -lcezmisc
 LDADD.queue_test=	-lcezqueue
 LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
 LDADD.util_test=	-lcezutil
+
+.ifndef NOSSL
+# libressl
+CFLAGS+=	-I${LOCALBASE}/include
+LDFLAGS+=	-L${LOCALBASE}/lib
+.endif
 
 .ifndef NOSQLITE
 # fossil cson requires sqlite
@@ -68,7 +74,6 @@ MAKEOBJDIR= .
 install:
 
 test:
-	./assoc_test
 	./blob_test
 	./cgi_test
 .ifndef NOSQLITE
@@ -85,3 +90,4 @@ test:
 	./util_test
 
 .include <bsd.progs.mk>
+.include <bsd.subdir.mk>

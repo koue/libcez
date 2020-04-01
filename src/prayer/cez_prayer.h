@@ -34,12 +34,19 @@
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <netdb.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <syslog.h>
+#include <pwd.h>
+#include <unistd.h>
 
 #include "cez_prayer_misc.h"
 
@@ -52,6 +59,15 @@
 
 #include "cez_prayer_mystring.h"
 #include "cez_prayer_utf8.h"
+
+#include "cez_prayer_ssl.h"
+#include "cez_prayer_iostream.h"
+#include "cez_prayer_ipaddr.h"
+#include "cez_prayer_process.h"
+#include "cez_prayer_os.h"
+#include "cez_prayer_list.h"
+#include "cez_prayer_log.h"
+#include "cez_prayer_config.h"
 
 #include "cez_prayer_template_vals.h"
 #include "cez_prayer_template_fns.h"
