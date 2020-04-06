@@ -1,7 +1,8 @@
 #
 LOCALBASE?=	/usr/local
 PROGS=		assoc_test \
-		os_test
+		os_test \
+		pool_test
 
 CFLAGS=		-I../../src/prayer \
 		-I../
@@ -29,5 +30,6 @@ install:
 test:
 	./assoc_test
 	./os_test
+	./pool_test
 
 .include <bsd.progs.mk>
