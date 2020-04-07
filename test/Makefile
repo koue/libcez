@@ -1,5 +1,6 @@
 #
 SUBDIR= 	fossil \
+		net \
 		prayer
 
 LOCALBASE?=	/usr/local
