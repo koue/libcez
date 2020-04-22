@@ -1,0 +1,178 @@
+$Cambridge: hermes/src/prayer/docs/TEMPLATES,v 1.2 2008/09/16 09:59:56 dpc22 Exp $
+
+Basic premise
+=============
+
+Simple macro expansion language where the majority of the data will come
+from template files. All HTML should live in the template files.
+
+Template source files are just HTML, with the following escapes:
+
+1) <% $foo/$bar |X %> for inline variable expansion.
+
+2) % at start of line introduces control structure, e.g: IF, FOREACH, CALL.
+   Most control structures have a termination line: e.g: ENDIF, ENDFOREACH
+
+Requirements
+============
+
+HTML should appear mostly as is so that Web developers can make useful
+updates without having to grok C.  Test suite so that we can update and
+test new templates without needing a full Prayer installation and
+interactive logins.
+
+Ability to update and test templates without needing to recompile anything
+for fast development. Precompiled version for production use.
+
+Variable expansion with various kind of quoting.
+
+Ability for one template to call another, with parameters:
+  % CALL template, $a => 1, $b => "$foo/${bar}"
+
+Four very simple loop/control structures:
+  % FOREACH $i @list <block> ENDFOREACH
+  % LOOP $count <block> ENDLOOP
+  % IFDEF $var <block> ELSE <block> ENDIF
+  % IFEQ $var1 "fred" <block> ELSE <block> ENDIF
+
+Don't need to support complex expression inside the templates e.g:
+  % IF ($a == 'hello').
+
+Leave C to do the heavy lifting by adding variables template can IFDEF on.
+
+Variable Syntax and <% %> expansion
+===================================
+
+Variable names:
+   [a-zA-Z0-9_]+. Quote using '{}' to remove ambiguity e.g: ${a}b${c}
+
+Possible Variable quoting:
+  $a
+  ${a}
+  $a->b
+  $a->{b}
+  ${a->b}
+
+Use \ to quote magic chars: \\, \$, \{ and \}
+
+Use Perl hash syntax to split up the namespace into managable chunks  (so
+that we can include long list of possible expansions for each template).
+
+Internal varibale name to Prayer assoc lookup mapping:
+  $a->b   ==>  "a-b"      $a is normal reference setup by Prayer 
+  $i->b   ==>  "@a-b"     $i is variable used on foreach LHS.
+                          Think that we only ever need to track one such.
+
+No complex expressions beyond string concatenation:
+
+  $a/${b->c}
+
+Do need ability to filter HTML output. Mason uses following modifiers:
+
+  |n No encoding: send raw data
+  |h HTML quoting
+  |u URL which should have % encoding applied
+
+e.g:  <% "$a/${b->c}" |u %>. Prayer requires a filter on all <% %> expansions.
+
+Add the following:
+  |s Session URL (either /session/user/<id>/... or ... using @)
+  |S NOSEQ Session URL
+  |c Prayer canon encoding
+  |7 modified UTF7 to UTF8 conversion (single variables only)
+
+In addition there are places where we need to URL or canon encode variables
+between |s quoting is applied. Do this on a per variable basis, using
+${foo|c}, e.g: <% rename/${name|c} |s %>, <% change/${name|7} |s %>
+
+Update: We now also allow:
+  <% ", " IFDEF $a->next %>
+  <% "$foo" IFEQ $bar $baz %>
+
+just to avoid:
+  blah blah
+  % IFDEF $a->next
+  , 
+  % ENDIF
+  blah blah
+
+Control structures
+==================
+
+Following Mason style, use '%' at the start of line for control. We allow
+empty % lines and %# for comments.  By convention control words uppercase
+just so that they stand out from the HTML. Doesn't actually matter.
+
+CALL
+====
+
+Basic form is:
+
+ % CALL template
+
+However we also allow parameters, in a Mason like style:
+
+ % CALL template, $a => 1, $b => "$foo/${bar}",
+ %                $c => "hh"
+
+We allow continuation lines here (and only here), as some templates take
+quite a lot of parameters.  Variables defined by the argument list override
+existing variables for the duration of the called template. Many templates
+use leading _ (e.g: $_a to avoid conflicts).  The parameter list only
+applies to the current template: if this template wants to pass variables
+into subsiduary templates then it needs to define them ifself e.g:
+
+ % CALL template2, $a => $a, $b => $b.
+
+This approach seemed simplest, and less prone to unexpected side effects.
+
+IFDEF/IFNDEF and IFEQ/IFNEQ
+===========================
+
+% IFDEF $a->{b} {
+<li>Some item
+% ELSE
+<li>Another item
+% ENDIF
+
+% IFEQ $a->{b} "fred" {
+<li>Some item
+% ELSE
+<li>Another item
+% ENDIF
+
+Nested ifdefs allow for:
+
+% IFDEF $a->{b}
+% ELSE
+%   IFDEF $a->{b}
+%   ENDIF
+% ENDIF
+
+Currently no ELIFDEF
+
+FOREACH
+=======
+
+% FOREACH $i @list {
+<tr>
+  <td>
+  <% $i->a %>
+  </td>
+  <td>
+  <% $i->{b}/$i->{c} %>     <-- Treat block inside <% %> as quoted string?
+  </td>
+</tr>
+% ENDFOREACH
+
+Can't think of any place where we needed nested foreach, which makes
+it easier to track %i magic variables.
+
+LOOP
+====
+
+%# Used in a few select places, typically for intentation.
+% LOOP $count
+&nbsp;
+% ENDLOOP
+

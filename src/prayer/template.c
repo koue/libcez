@@ -185,6 +185,8 @@ template_getexpr(char **sp, struct pool *pool)
 
 /* ====================================================================== */
 
+//koue
+#if 0
 extern struct template_map_index template_map_index[];
 
 struct template *
@@ -223,4 +225,4 @@ template_find(char *set, char *name, struct pool *pool)
     /* Not found */
     return (NIL);
 }
-
+#endif

@@ -1,8 +1,8 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_core.h"
 
 /* Class which provides memory allocation pools: client routines can make
  * arbitary number of allocation requests against a single pool, but all
@@ -22,7 +22,7 @@
  *   Size of aggregate allocation blocks. This is not an upper limit on the
  *   size of alloc requests against the block. It just defines the size of
  *   memory blocks which be be used to store multiple items.
- *   0 => use a default which is sensible for many small allocation requests.
+ *   NULL => use a default which is sensible for many small allocation requests.
  *
  * Returns: New pool
  **************************************************************************/
@@ -31,10 +31,12 @@ struct pool *pool_create(unsigned long blocksize)
 {
     struct pool *pool;
 
-    if ((pool = (struct pool *) malloc(sizeof(struct pool))) == NIL)
+    if ((pool = (struct pool *) malloc(sizeof(struct pool))) == NULL) {
         fprintf(stderr, "pool_create(): Out of memory\n");
+	exit(1);
+    }
 
-    pool->first = pool->last = NIL;
+    pool->first = pool->last = NULL;
     pool->blocksize =
         (blocksize > 0) ? blocksize : PREFERRED_POOL_BLOCK_SIZE;
     pool->avail = 0;
@@ -43,7 +45,7 @@ struct pool *pool_create(unsigned long blocksize)
     if (pool->blocksize > (sizeof(struct pool_elt *)))
         pool->blocksize -= (sizeof(struct pool_elt *));
 
-    pool->str_list = NIL;
+    pool->str_list = NULL;
 
     return (pool);
 }
@@ -85,10 +87,12 @@ void *pool_alloc(struct pool *p, unsigned long size)
     struct pool_elt *pe;
     void *result;
 
-    if (p == NIL) {
+    if (p == NULL) {
         /* Convert to simple malloc if no pool given */
-        if ((result = (void *) malloc(size)) == NIL)
+        if ((result = (void *) malloc(size)) == NULL) {
             fprintf(stderr, "Out of memory\n");
+	    exit(1);
+	}
         return (result);
     }
 
@@ -108,8 +112,10 @@ void *pool_alloc(struct pool *p, unsigned long size)
         pe = ((struct pool_elt *)
               (malloc(sizeof(struct pool_elt) + p->blocksize - 1)));
 
-        if (pe == NIL)
+        if (pe == NULL) {
             fprintf(stderr, "Out of memory\n");
+	    exit(1);
+	}
 
         p->avail = p->blocksize - size; /* Probably some space left over */
 
@@ -121,7 +127,7 @@ void *pool_alloc(struct pool *p, unsigned long size)
             /* First element in linked list */
             p->first = p->last = pe;
 
-        pe->next = NIL;
+        pe->next = NULL;
         return (&pe->data[0]);
     }
 
@@ -129,8 +135,10 @@ void *pool_alloc(struct pool *p, unsigned long size)
     pe = ((struct pool_elt
            *) (malloc(sizeof(struct pool_elt) + size - 1)));
 
-    if (pe == NIL)
+    if (pe == NULL) {
         fprintf(stderr, "Out of memory\n");
+	exit(1);
+    }
 
     /* We add oversized pe blocks to the _start_ of the linked list This way
      * we can continue to use partly filled buckets at the end of the
@@ -144,7 +152,7 @@ void *pool_alloc(struct pool *p, unsigned long size)
     } else {
         /* List was empty, need to create anyway */
         p->first = p->last = pe;
-        pe->next = NIL;
+        pe->next = NULL;
         p->avail = 0;
     }
 
@@ -166,8 +174,8 @@ char *pool_strdup(struct pool *p, char *value)
 {
     char *s;
 
-    if (value == NIL)
-        return (NIL);
+    if (value == NULL)
+        return (0);
 
     s = pool_alloc(p, strlen(value) + 1);
     strcpy(s, value);
@@ -190,7 +198,7 @@ char *pool_strcat(struct pool *p, char *s1, char *s2)
     char *s;
 
     if (!(s1 && s2))
-        return (NIL);
+        return (0);
 
     s = pool_alloc(p, strlen(s1) + strlen(s2) + 1);
     strcpy(s, s1);
@@ -215,7 +223,7 @@ char *pool_strcat3(struct pool *p, char *s1, char *s2, char *s3)
     char *s;
 
     if (!(s1 && s2 && s3))
-        return (NIL);
+        return (0);
 
     s = pool_alloc(p, strlen(s1) + strlen(s2) + strlen(s3) + 1);
     strcpy(s, s1);
@@ -309,6 +317,7 @@ unsigned long pool_vprintf_size(char *fmt, va_list ap)
                 break;
             default:
                 fprintf(stderr, "Bad format string to buffer_printf\n");
+		exit(1);
             }
     }
     return (count);
@@ -401,11 +410,11 @@ char *pool_printf(struct pool *p, char *fmt, ...)
  * Join an array of strings.
  *    pool: Target pool
  * join_char: Separator character e.g: '/' for filenames
- *    argv: NIL terminated array of strings to join.
+ *    argv: 0 terminated array of strings to join.
  *
  * Returns: joined string
  *
- * Example: pool_join(pool, '/', &{"Hello", "World", NIL}) -> "Hello/World"
+ * Example: pool_join(pool, '/', &{"Hello", "World", 0}) -> "Hello/World"
  ************************************************************************/
 
 char *pool_join(struct pool *pool, char join_char, char *argv[])

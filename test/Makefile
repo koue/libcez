@@ -1,5 +1,6 @@
 #
-SUBDIR= 	fossil \
+SUBDIR= 	core \
+		fossil \
 		net \
 		prayer
 
@@ -13,6 +14,7 @@ PROGS=		cgi_test \
 		util_test
 
 CFLAGS= 	-I${.CURDIR}/../src/cgi \
+		-I${.CURDIR}/../src/core \
 		-I${.CURDIR}/../src/keyvalue \
 		-I${.CURDIR}/../src/misc \
 		-I${.CURDIR}/../src/queue \
@@ -20,13 +22,14 @@ CFLAGS= 	-I${.CURDIR}/../src/cgi \
 		-I${.CURDIR}/../src/util
 
 LDFLAGS+=	-L${.CURDIR}/../src/cgi \
+		-L${.CURDIR}/../src/core \
 		-L${.CURDIR}/../src/keyvalue \
 		-L${.CURDIR}/../src/misc \
 		-L${.CURDIR}/../src/queue \
 		-L${.CURDIR}/../src/prayer \
 		-L${.CURDIR}/../src/util
 
-LDADD.cgi_test=		-lcezcgi -lcezprayer
+LDADD.cgi_test=		-lcezcgi -lcezcore
 LDADD.hmac_test=	-lcezmisc -lcrypto
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.queue_test=	-lcezqueue

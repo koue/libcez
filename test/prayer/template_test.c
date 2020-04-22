@@ -28,49 +28,31 @@
  *
  */
 
+#include <stdarg.h>
+
+#include "cez_core.h"
 #include "cez_prayer.h"
 #include "cez_test.h"
-
-struct item {
-	char *p_strdup;
-	char *p_strcat;
-	char *p_strcat3;
-	char *p_printf;
-	char *p_join;
-};
 
 int
 main(void)
 {
-	struct pool *pool;
-	struct item *item;
-	char *str_join[] = {"pool", "join", NIL};
+	struct pool *pool = pool_create(14096);
+	struct buffer *b = buffer_create(pool, 11024);
+	struct template_vals *tvals;
+	int c;
 
-	cez_test_start();
+	tvals = template_vals_create(pool, "./", "TEMPLATES", 0, 0, 0);
+	template_vals_string(tvals, "$mystring", "showmethemoney");
 
-	assert((pool = pool_create(sizeof(struct item))) != NULL);
-	assert((item = pool_alloc(pool, sizeof(struct item))) != NULL);
-
-	assert((item->p_strdup = pool_strdup(pool, "p_strdup")) != NULL);
-	assert(strcmp(item->p_strdup, "p_strdup") == 0);
-	assert(strlen(item->p_strdup) == 8);
-
-	assert((item->p_strcat = pool_strcat(pool, "p_", "strcat")) != NULL);
-	assert(strcmp(item->p_strcat, "p_strcat") == 0);
-	assert(strlen(item->p_strcat) == 8);
-
-	assert((item->p_strcat3 = pool_strcat3(pool, "p_", "strcat", "3")) != NULL);
-	assert(strcmp(item->p_strcat3, "p_strcat3") == 0);
-	assert(strlen(item->p_strcat3) == 9);
-
-	assert((item->p_printf = pool_printf(pool, "p_%s %d", "printf", 4)) != NULL);
-	assert(strcmp(item->p_printf, "p_printf 4") == 0);
-	assert(strlen(item->p_printf) == 10);
-
-	assert((item->p_join = pool_join(pool, '_', str_join)) != NULL);
-	assert(strcmp(item->p_join, "pool_join") == 0);
-	assert(strlen(item->p_join) == 9);
-
+	if (!template_expand("mystring", tvals, b)) {
+		fputs(str_fetch(tvals->error), stdout);
+	}
+	buffer_rewind(b);
+	while ((c = bgetc(b)) != EOF) {
+		fputc(c, stdout);
+	}
+	buffer_free(b);
 	pool_free(pool);
 
 	return (0);

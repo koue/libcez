@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,12 +48,10 @@
 #include <pwd.h>
 #include <unistd.h>
 
-#include "cez_prayer_misc.h"
+#include <cez_core.h>
 
 #include "cez_prayer_assoc.h"
 #include "cez_prayer_buffer.h"
-#include "cez_prayer_pool.h"
-#include "cez_prayer_str.h"
 
 #include "cez_prayer_html.h"
 

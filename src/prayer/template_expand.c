@@ -470,9 +470,12 @@ template_expand_call(struct template_call *item,
     char *s, *t;
     char *err = NIL;
 
+//koue
+#if 0
     if (tvals->use_compiled)
         template = template_find(tvals->set, item->name, tvals->pool);
     else
+#endif
         template = template_parse(tvals->dir, tvals->set,
                                   item->name, tvals->pool);
     if (!template) {
@@ -555,11 +558,14 @@ template_expand(char *name, struct template_vals *tvals, struct buffer *b)
     struct str *error = tvals->error;
     char *err;
 
-    if (tvals->use_compiled) {
+//koue
+#if 0
+    if (tvals->use_compiled)
         template = template_find(tvals->set, name, tvals->pool);
-    } else {
+    else
+#endif
         template = template_parse(tvals->dir, tvals->set, name, tvals->pool);
-    }
+
     if (!template) {
         str_printf(tvals->error,
                    "Template %s not found (top level template_expand())\n",

@@ -2,14 +2,16 @@
 LOCALBASE?=	/usr/local
 PROGS=		assoc_test \
 		os_test \
-		pool_test
+		template_test
 
-CFLAGS=		-I../../src/prayer \
-		-I../
+CFLAGS=		-I${.CURDIR}/../../src/core \
+		-I${.CURDIR}/../../src/prayer \
+		-I${.CURDIR}/../
 
-LDFLAGS+=	-L../../src/prayer
+LDFLAGS+=	-L${.CURDIR}/../../src/core \
+		-L${.CURDIR}/../../src/prayer
 
-LDADD=		-lcezprayer -lutil
+LDADD=		-lcezprayer -lcezcore -lutil -liconv
 
 .ifndef NOSSL
 # libressl
@@ -30,6 +32,6 @@ install:
 test:
 	./assoc_test
 	./os_test
-	./pool_test
+	./template_test
 
 .include <bsd.progs.mk>

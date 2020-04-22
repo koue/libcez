@@ -28,6 +28,9 @@
  *
  */
 
+#include <stdarg.h>
+
+#include "cez_core.h"
 #include "cez_prayer.h"
 #include "cez_test.h"
 

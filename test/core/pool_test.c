@@ -28,30 +28,50 @@
  *
  */
 
-#ifndef _CEZ_CGI_H
-#define _CEZ_CGI_H
+#include "cez_core.h"
+#include "cez_test.h"
 
-#include <cez_core.h>
-
-struct cez_cgi {
-	struct pool *pool;
-	const char *http_host;
-	const char *https;
-	const char *path_info;
-	const char *query_string;
-	const char *request_method;
-	const char *script_name;
-	const char *server_name;
-	const char *server_port;
-	const char *http_cookie;
-	const char *http_referer;
-	const char *user_agent;
-	unsigned int content_length;
+struct item {
+	char *p_strdup;
+	char *p_strcat;
+	char *p_strcat3;
+	char *p_printf;
+	char *p_join;
 };
 
-void cez_cgi_free(struct cez_cgi *cgi);
+int
+main(void)
+{
+	struct pool *pool;
+	struct item *item;
+	char *str_join[] = {"pool", "join", NULL};
 
-struct cez_cgi *cez_cgi_create(void);
+	cez_test_start();
 
-#endif
+	assert((pool = pool_create(sizeof(struct item))) != NULL);
+	assert((item = pool_alloc(pool, sizeof(struct item))) != NULL);
 
+	assert((item->p_strdup = pool_strdup(pool, "p_strdup")) != NULL);
+	assert(strcmp(item->p_strdup, "p_strdup") == 0);
+	assert(strlen(item->p_strdup) == 8);
+
+	assert((item->p_strcat = pool_strcat(pool, "p_", "strcat")) != NULL);
+	assert(strcmp(item->p_strcat, "p_strcat") == 0);
+	assert(strlen(item->p_strcat) == 8);
+
+	assert((item->p_strcat3 = pool_strcat3(pool, "p_", "strcat", "3")) != NULL);
+	assert(strcmp(item->p_strcat3, "p_strcat3") == 0);
+	assert(strlen(item->p_strcat3) == 9);
+
+	assert((item->p_printf = pool_printf(pool, "p_%s %d", "printf", 4)) != NULL);
+	assert(strcmp(item->p_printf, "p_printf 4") == 0);
+	assert(strlen(item->p_printf) == 10);
+
+	assert((item->p_join = pool_join(pool, '_', str_join)) != NULL);
+	assert(strcmp(item->p_join, "pool_join") == 0);
+	assert(strlen(item->p_join) == 9);
+
+	pool_free(pool);
+
+	return (0);
+}

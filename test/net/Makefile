@@ -2,14 +2,16 @@
 LOCALBASE?=	/usr/local
 PROGS=		http_test
 
-CFLAGS=		-I${.CURDIR}/../../src/net \
+CFLAGS=		-I${.CURDIR}/../../src/core \
+		-I${.CURDIR}/../../src/net \
 		-I${.CURDIR}/../../src/prayer \
 		-I${.CURDIR}/../
 
-LDFLAGS+=	-L${.CURDIR}/../../src/net \
+LDFLAGS+=	-L${.CURDIR}/../../src/core \
+		-L${.CURDIR}/../../src/net \
 		-L${.CURDIR}/../../src/prayer
 
-LDADD=		-lceznet -lcezprayer -lutil
+LDADD=		-lceznet -lcezprayer -lcezcore -lutil
 
 .ifndef NOSSL
 # libressl

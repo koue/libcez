@@ -1,4 +1,4 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
@@ -6,7 +6,7 @@
  * memory management hassle than memblock. In fact should replace
  * memblock in many places. */
 
-#include "cez_prayer.h"
+#include "cez_core.h"
 
 struct str *str_create(struct pool *pool, unsigned long blocksize)
 {
@@ -16,11 +16,11 @@ struct str *str_create(struct pool *pool, unsigned long blocksize)
     str->alloc = (blocksize > 0) ? blocksize : PREFERRED_STR_BLOCK_SIZE;
     str->s = xmalloc(str->alloc);
     str->s[0] = '\0';
-    str->next = NIL;
+    str->next = NULL;
 
     if (pool) {
         str->next = pool->str_list;
-        pool->str_list = str;
+	pool->str_list = str;
     }
 
     return(str);
@@ -42,7 +42,7 @@ str_reserve(struct str *str, unsigned long size)
 void str_free(struct str *str)
 {
     free(str->s);
-    str->s = NIL;
+    str->s = NULL;
 }
 
 void str_free_chain(struct str *str)
@@ -51,11 +51,10 @@ void str_free_chain(struct str *str)
 
     while (str) {
         next = str->next;
-        str_free(str);
-        str = next;
+	str_free(str);
+	str = next;
     }
 }
-
 
 void
 str_putchar(struct str *str, unsigned char c)
@@ -152,6 +151,7 @@ void str_vaprintf(struct str *str, char *fmt, va_list ap)
                 break;
             default:
                 fprintf(stderr, "Bad format string to buffer_printf\n");
+		exit(1);
             }
     }
 }
