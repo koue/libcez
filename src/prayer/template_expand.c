@@ -470,8 +470,7 @@ template_expand_call(struct template_call *item,
     char *s, *t;
     char *err = NIL;
 
-//koue
-#if 0
+#ifdef PRAYER_TEMPLATE_COMPILE
     if (tvals->use_compiled)
         template = template_find(tvals->set, item->name, tvals->pool);
     else
@@ -558,8 +557,7 @@ template_expand(char *name, struct template_vals *tvals, struct buffer *b)
     struct str *error = tvals->error;
     char *err;
 
-//koue
-#if 0
+#ifdef PRAYER_TEMPLATE_COMPILE
     if (tvals->use_compiled)
         template = template_find(tvals->set, name, tvals->pool);
     else

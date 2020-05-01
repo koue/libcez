@@ -185,8 +185,7 @@ template_getexpr(char **sp, struct pool *pool)
 
 /* ====================================================================== */
 
-//koue
-#if 0
+#ifdef PRAYER_TEMPLATE_COMPILE
 extern struct template_map_index template_map_index[];
 
 struct template *
