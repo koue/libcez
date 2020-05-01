@@ -51,6 +51,35 @@ char *pool_printf(struct pool *p, char *fmt, ...);
 
 char *pool_join(struct pool *pool, char join_char, char *argv[]);
 
+#ifndef CORE_POOL_ONLY
+/* Misc */
+
+typedef int BOOL;
+
+#ifndef NIL
+#define NIL (0)
+#endif
+
+#ifndef T
+#define T (1)
+#endif
+
+#define CRLF "\015\012"
+
+/* Fix ctype.h macros. */
+#define UC (unsigned char)
+#define Uisspace(c) isspace(UC(c))
+#define Uisalpha(c) isalpha(UC(c))
+#define Uisalnum(c) isalnum(UC(c))
+#define Uisdigit(c) isdigit(UC(c))
+#define Uisxdigit(c) isxdigit(UC(c))
+#define Uiscntrl(c) iscntrl(UC(c))
+#define Utoupper(c) toupper(UC(c))
+#define Utolower(c) tolower(UC(c))
+
+void *xmalloc(unsigned long size);
+void *xrealloc(void *old, unsigned long size);
+
 /* Str */
 
 struct str {
@@ -92,32 +121,6 @@ unsigned long str_len(struct str *str);
 void str_rewind(struct str *str, unsigned long offset);
 void *str_fetch(struct str *s);
 
-/* misc */
-
-typedef int BOOL;
-
-#ifndef NIL
-#define NIL (0)
-#endif
-
-#ifndef T
-#define T (1)
-#endif
-
-#define CRLF "\015\012"
-
-/* Fix ctype.h macros. */
-#define UC (unsigned char)
-#define Uisspace(c) isspace(UC(c))
-#define Uisalpha(c) isalpha(UC(c))
-#define Uisalnum(c) isalnum(UC(c))
-#define Uisdigit(c) isdigit(UC(c))
-#define Uisxdigit(c) isxdigit(UC(c))
-#define Uiscntrl(c) iscntrl(UC(c))
-#define Utoupper(c) toupper(UC(c))
-#define Utolower(c) tolower(UC(c))
-
-void *xmalloc(unsigned long size);
-void *xrealloc(void *old, unsigned long size);
+#endif // CORE_POOL_ONLY
 
 #endif

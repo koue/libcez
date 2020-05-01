@@ -61,7 +61,9 @@ void pool_free(struct pool *p)
     struct pool_elt *pe = p->first;
     struct pool_elt *tofree;
 
+#ifndef CORE_POOL_ONLY
     str_free_chain(p->str_list);
+#endif
 
     while (pe) {
         tofree = pe;
