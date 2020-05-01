@@ -30,12 +30,15 @@ pre-configure:
 	@(cd ${WRKDIR}/libressl-${SSL_VERSION} && ${SETENV} ./configure && ${SETENV} ${MAKE_ENV} ${MAKE})
 
 post-configure:
+.	for FILE in \
+		test/Makefile \
+		test/net/Makefile \
+		test/prayer/Makefile
 	${REINPLACE_CMD} 's|-lssl|${WRKDIR}/libressl-${SSL_VERSION}/ssl/.libs/libssl.a|g' \
-		${WRKSRC}/test/prayer/Makefile
+		${WRKSRC}/${FILE}
 	${REINPLACE_CMD} 's|-lcrypto|${WRKDIR}/libressl-${SSL_VERSION}/crypto/.libs/libcrypto.a|g' \
-		${WRKSRC}/test/prayer/Makefile
-	${REINPLACE_CMD} 's|-lcrypto|${WRKDIR}/libressl-${SSL_VERSION}/crypto/.libs/libcrypto.a|g' \
-		${WRKSRC}/test/Makefile
+		${WRKSRC}/${FILE}
+.	endfor
 
 
 .include <bsd.port.mk>
