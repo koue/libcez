@@ -1,6 +1,7 @@
 #
 LOCALBASE?=	/usr/local
-PROGS=		pool_test
+PROGS=		pool_test \
+		str_test
 
 CFLAGS=		-I${.CURDIR}/../../src/core \
 		-I${.CURDIR}/../
@@ -18,5 +19,6 @@ install:
 
 test:
 	./pool_test
+	./str_test
 
 .include <bsd.progs.mk>
