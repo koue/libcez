@@ -6,7 +6,7 @@
  * memory management hassle than memblock. In fact should replace
  * memblock in many places. */
 
-#include "cez_core.h"
+#include "cez_core_pool.h"
 
 struct str *str_create(struct pool *pool, unsigned long blocksize)
 {

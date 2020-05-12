@@ -2,7 +2,7 @@
 /* Copyright (c) University of Cambridge 2000 - 2010 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_net.h"
 
 #include <sys/param.h>
 #include "cez_prayer_os_bsd.h"
@@ -336,6 +336,7 @@ int os_inet_pton(char *str, struct ipaddr *addr) {
 
 /* ====================================================================== */
 
+#if 0 // koue: unused
 /* Trivial SIG_CLD handler to prevent zombies from hanging around */
 
 void os_child_reaper(void)
@@ -686,3 +687,4 @@ BOOL os_run_pty(char *cmdline, int *fdp, int *childpidp)
     *childpidp = pid;
     return (T);
 }
+#endif

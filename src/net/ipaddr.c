@@ -1,12 +1,8 @@
-/* $Cambridge: hermes/src/prayer/lib/ipaddr.c,v 1.6 2009/08/20 12:37:55 dpc22 Exp $ */
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_net.h"
 
 /* Class for recording and comparing IP addresses. At the moment IPv4
  * only. Shouldn't be to hard to expand to IPv6 as well I hope */
@@ -229,8 +225,9 @@ BOOL ipaddr_fetch_iostream(struct ipaddr *addr, struct iostream *stream)
     }
 
     if (c == EOF) {
-        log_panic
-            ("Unexpected disconnect receiving IP address from frontend");
+        fprintf(stderr,
+            "Unexpected disconnect receiving IP address from frontend");
+	exit(1);
         rc = NIL;
     }
 
@@ -258,7 +255,8 @@ ipaddr_set(struct ipaddr *ipaddr, unsigned long version,
     };
 
     if (version != 4 && version != 6)
-        log_fatal("ipaddr_set(): IPv4 and IPv6 only supported!");
+        fprintf(stderr, "ipaddr_set(): IPv4 and IPv6 only supported!");
+	exit(1);
 
     ipaddr->version = version;
     memset(ipaddr->addr, 0, 16);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,35 +28,29 @@
  *
  */
 
-#include <stdarg.h>
+#include <errno.h>
+#include <sys/fcntl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <syslog.h>
+#include <unistd.h>
 
-#include "cez_core.h"
-#include "cez_prayer.h"
+#include "cez_core_pool.h"
+#include "cez_log.h"
 #include "cez_test.h"
-
-struct item {
-	struct pool *pool;	/* Allocation pool */
-	struct assoc *assoc;	/* Associative array for fast lookups */
-};
 
 int
 main(void)
 {
-	struct pool *pool = pool_create(1024);
-	struct item *i;
+	struct log *log;
 
 	cez_test_start();
-	i = pool_alloc(pool, sizeof(struct item));
-	i->pool = pool;
-	i->assoc = assoc_create(pool, 16, T);
-	/* Add word to assoc chain */
-	assoc_update(i->assoc, "first", "1", NIL);
-	assoc_update(i->assoc, "second", "1", NIL);
-	assoc_update(i->assoc, "third", "1", NIL);
-	assert(assoc_lookup(i->assoc, "second") != NULL);
-	assoc_delete(i->assoc, "second");
-	assert(assoc_lookup(i->assoc, "second") == NULL);
-	pool_free(i->pool);
+
+	log = log_create("mylog", NIL);
+	assert(log_open(log) != NIL);
+	log_here(log, "first line");
+	log_here(log, "%s line", "second");
+	log_free(log);
 
 	return (0);
 }

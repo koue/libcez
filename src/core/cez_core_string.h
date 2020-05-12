@@ -1,6 +1,10 @@
-/* Copytight (c) Nikola Kolev <koue@chaosophia.net> */
+/* Copytight (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
+
+#ifndef _CEZ_CORE_STRING
+#define _CEZ_CORE_STRING
+#pragma once
 
 /* Some Basic utility functions */
 
@@ -71,4 +75,5 @@ string_strip_crlf(char *s);
 char *
 string_email_split(struct pool *pool, char *s);
 
+#endif
 

@@ -1,8 +1,4 @@
-/* $Cambridge: hermes/src/prayer/lib/ssl.h,v 1.4 2012/06/30 14:30:08 dpc22 Exp $ */
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 

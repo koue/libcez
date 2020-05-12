@@ -1,18 +1,16 @@
 #
 LOCALBASE?=	/usr/local
-PROGS=		http_test
+PROGS=		http_test \
+		os_test
 
 CFLAGS=		-I${.CURDIR}/../../src/core \
 		-I${.CURDIR}/../../src/net \
-		-I${.CURDIR}/../../src/prayer \
 		-I${.CURDIR}/../
 
 LDFLAGS+=	-L${.CURDIR}/../../src/core \
-		-L${.CURDIR}/../../src/net \
-		-L${.CURDIR}/../../src/prayer
+		-L${.CURDIR}/../../src/net
 
-LDADD=		-lceznet -lcezprayer -lcezcore -lutil
-
+LDADD=-lceznethttp -lceznet -lcezcorepool -lcezcorebuffer -lcezcorestring -lcezcoreassoc -lutil
 .ifndef NOSSL
 # libressl
 CFLAGS+=	-DSSL=1 \
@@ -31,5 +29,6 @@ install:
 
 test:
 	./http_test
+	./os_test
 
 .include <bsd.progs.mk>

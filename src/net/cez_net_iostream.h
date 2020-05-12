@@ -1,8 +1,4 @@
-/* $Cambridge: hermes/src/prayer/lib/iostream.h,v 1.3 2008/09/16 09:59:57 dpc22 Exp $ */
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 

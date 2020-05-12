@@ -1,8 +1,9 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_core_pool.h"
+#include "cez_core_assoc.h"
 
 /* Class which provides simple associative arrays (aka hash tables). Used
  * to be called "hash", however c-client in IMAP 2001 toolkit defines its

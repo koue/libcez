@@ -1,6 +1,7 @@
 #
 LOCALBASE?=	/usr/local
-PROGS=		pool_test \
+PROGS=		assoc_test \
+		pool_test \
 		str_test
 
 CFLAGS=		-I${.CURDIR}/../../src/core \
@@ -8,7 +9,7 @@ CFLAGS=		-I${.CURDIR}/../../src/core \
 
 LDFLAGS+=	-L${.CURDIR}/../../src/core
 
-LDADD=		-lcezcore -lutil
+LDADD=		-lcezcorepool -lcezcoreassoc -lcezcorebuffer -lutil
 
 MAN=
 MK_DEBUG_FILES=	no
@@ -18,6 +19,7 @@ MAKEOBJDIR= .
 install:
 
 test:
+	./assoc_test
 	./pool_test
 	./str_test
 

@@ -1,8 +1,4 @@
-/* $Cambridge: hermes/src/prayer/lib/iostream.c,v 1.3 2008/09/16 09:59:57 dpc22 Exp $ */
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
@@ -10,7 +6,7 @@
    read/write buffers) and provide timeout options on read.
    Also supply a (more or less) transparent interface to SSL wrapped streams*/
 
-#include "cez_prayer.h"
+#include "cez_net.h"
 
 /* iostream_init() *******************************************************
  *
@@ -248,8 +244,9 @@ static int iostream_read_wait(struct iostream *x)
         /* Wait indefinitely */
         while (select(x->fd + 1, &readfds, NIL, NIL, NIL) < 0) {
             if (errno != EINTR)
-                log_fatal("iostream_getchar(): select() failed: %s",
+                fprintf(stderr, "iostream_getchar(): select() failed: %s",
                           strerror(errno));
+		exit(1);
         }
         return ((FD_ISSET(x->fd, &readfds)) ? T : NIL);
     }
@@ -259,8 +256,9 @@ static int iostream_read_wait(struct iostream *x)
 
     while (select(x->fd + 1, &readfds, NIL, NIL, &timeout) < 0) {
         if (errno != EINTR)
-            log_fatal("iostream_getchar(): select() failed: %s",
+            fprintf(stderr, "iostream_getchar(): select() failed: %s",
                       strerror(errno));
+            exit(1);
     }
     return ((FD_ISSET(x->fd, &readfds)) ? T : NIL);
 }
@@ -451,7 +449,8 @@ BOOL iostream_have_input(struct iostream * x)
 
     while (select(x->fd + 1, &readfds, NIL, NIL, &timeout) < 0) {
         if (errno != EINTR)
-            log_fatal("iostream_getchar(): select() failed");
+            fprintf(stderr, "iostream_getchar(): select() failed");
+	    exit(1);
     }
 
     if (FD_ISSET(x->fd, &readfds))
@@ -498,8 +497,9 @@ static int iostream_write_wait(struct iostream *x)
         /* Wait indefinitely */
         while (select(x->fd + 1, NIL, &writefds, NIL, NIL) < 0) {
             if (errno != EINTR)
-                log_fatal("iostream_write_wait(): select() failed: %s",
+                fprintf(stderr, "iostream_write_wait(): select() failed: %s",
                           strerror(errno));
+		exit(1);
         }
         return ((FD_ISSET(x->fd, &writefds)) ? T : NIL);
     }
@@ -509,8 +509,9 @@ static int iostream_write_wait(struct iostream *x)
 
     while (select(x->fd + 1, NIL, &writefds, NIL, &timeout) < 0) {
         if (errno != EINTR)
-            log_fatal("iostream_write_wait(): select() failed: %s",
+            fprintf(stderr, "iostream_write_wait(): select() failed: %s",
                       strerror(errno));
+            exit(1);
     }
     return ((FD_ISSET(x->fd, &writefds)) ? T : NIL);
 }
@@ -726,7 +727,8 @@ BOOL iostream_printf(struct iostream *x, char *fmt, ...)
                 ioputc('%', x);
                 break;
             default:
-                log_fatal("Bad format string to iostream_printf");
+                fprintf(stderr, "Bad format string to iostream_printf");
+		exit(1);
             }
     }
     va_end(ap);

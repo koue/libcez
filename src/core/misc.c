@@ -1,5 +1,5 @@
 
-#include "cez_core.h"
+#include "cez_core_pool.h"
 
 void *
 xmalloc(unsigned long size)

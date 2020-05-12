@@ -28,7 +28,7 @@
  *
  */
 
-#include "cez_core.h"
+#include "cez_core_pool.h"
 #include "cez_test.h"
 
 struct item {

@@ -1,6 +1,10 @@
-/* Copyright (c) Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
+
+#ifndef _CEZ_CORE_BUFFER
+#define _CEZ_CORE_BUFFER
+#pragma once
 
 /* Buffer
  *
@@ -103,3 +107,6 @@ do {                                            \
 
 void buffer_encode_url(struct buffer *b, char *s);
 void buffer_encode_canon(struct buffer *b, char *s);
+
+#endif
+

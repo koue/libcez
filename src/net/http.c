@@ -44,25 +44,214 @@
 #include <errno.h>
 #include <time.h>
 
+#include "cez_core_pool.h"
+#include "cez_core_assoc.h"
+#include "cez_core_buffer.h"
+#include "cez_core_string.h"
+
 #include "cez_net_http.h"
 
+/*
 extern int debug;
 #define DFPRINTF(x,y)   if (debug >= x) fprintf y
 
 u_char body[32768];
-char *useragent = NULL;
-
-ssize_t atomicio(ssize_t (*f)(), int, void *, size_t);
 
 //void (*http_movecb)(struct uri *, char *) = NULL;
 
-struct uri *
-uri_new(void)
-{
-	struct uri *uri;
+*/
+// prayer
 
-	if ((uri = calloc(1, sizeof (struct uri))) == NULL)
-		return (NULL);
+struct http_response *
+http_response_create(void)
+{
+    struct pool *p = pool_create(RESPONSE_PREFERRED_BLOCK_SIZE);
+    struct http_response *response = pool_alloc(p, sizeof(struct http_response));
+
+    /* Make sure cleared out */
+    memset(response, 0, sizeof(struct http_response));
+
+    /* Common */
+    response->pool = p;
+
+    /* Input buffer */
+    response->read_buffer = buffer_create(p, PREFERRED_BUFFER_BLOCK_SIZE);
+    response->state = RESPONSE_INIT;
+    response->hdrs_offset = 0;
+    response->hdrs_size = 0;
+    response->hdrs_max_size = 0;
+    response->hdrs_crlfs = 1;
+    response->body_offset = 0;
+    response->body_size = 0;
+    response->body_max_size = 0;
+
+    response->preserve = NIL;
+    response->iseof = NIL;
+    response->error = NIL;
+
+    response->url = NIL;
+    response->url_host = NIL;
+    response->url_port = NIL;
+    response->url_path = NIL;
+
+    response->hdrs = assoc_create(p, 16, T);
+
+    response->status = 501;	/* Not implemented */
+
+    return (response);
+}
+
+void
+http_response_free(struct http_response *response)
+{
+    pool_free(response->pool);
+}
+
+static BOOL
+http_response_parse_headers_init(struct http_response *response)
+{
+    struct buffer *b = response->read_buffer;
+
+    response->state = RESPONSE_HDRS;
+    response->hdrs_offset = buffer_size(b);
+    response->hdrs_size = 0;
+    response->hdrs_crlfs = 1;
+
+    return (T);
+}
+
+static BOOL
+http_response_process_headers(struct http_response *response, char *data)
+{
+    char *header, *key, *oldvalue, *value, *s;
+
+    printf("%s\n", data);
+#if 0
+    while ((header = string_get_lws_line(&data, T))) {
+        /* Fetch one (possibly folded) header line at a time */
+	if (header[0] == '\0')
+	    continue;
+
+	if (!((key = string_get_token(&header)) && ((value = string_next_token(&header))))) {
+            /* Bad request */
+	    response->status = 400;
+	    return (NIL);
+	}
+
+	/* Convert string to lower case */
+	for (s = key; *s; s++)
+	    *s = tolower(*s);
+
+	if ((s == key) || (s[-1] != ':')) {
+	    /* Bad request */
+	    response->status = 400;
+	    return (NIL);
+	}
+
+	s[-1] = '\0';
+
+	if ((oldvalue = assoc_lookup(response->hdrs, key))) {
+	    s = pool_alloc(response->hdrs->pool,
+	                   strlen(value) + strlen(oldvalue) + 3);
+
+            strcpy(s, oldvalue);        /* Should be able to improve this */
+	    strcat(s, ", ");
+	    strcat(s, value);
+	    value = s;
+	}
+	/* Generate assoc entry. Don't need to copy key and value */
+	assoc_update(response->hdrs, key, value, NIL);
+    }
+#endif
+    return (T);
+}
+
+static BOOL
+http_response_parse_headers(struct http_response *response)
+{
+    struct buffer *b = response->read_buffer;
+    //unsigned long crlf_count = response->hdrs_crlfs;
+    char *data;
+    //int c = EOF;
+    //unsigned long count = response->hdrs_size;
+    //unsigned long maxsize = response->hdrs_max_size;
+
+    /* Record hdrs location first time into loop */
+    if (response->hdrs_offset == 0)
+        response->hdrs_offset = buffer_size(b);
+
+//    data = buffer_fetch(b, response->hdrs_offset, response->hdrs_size,
+//                        response->preserve);
+    data = buffer_fetch(b, 0, buffer_size(b), NIL);
+
+    http_response_process_headers(response, data);
+    return (T);
+}
+
+#if 0
+static BOOL http_response_parse_body_init(struct http_response *response)
+{
+    struct buffer *b = response->read_buffer;
+    char *value;
+    unsigned long len;
+
+    if ((value = assoc_lookup(response->hdrs, "content-length"))) {
+        if (((len = atoi(value)) > response->body_max_size)) {
+	    /* Eat the body */
+	    if (len < (5 * response->body_max_size)) {
+	        while ((len > 0) && (iogetc(stream) != EOF))
+		    len--;
+	    }
+
+            response->status = 413; 	/* Response too large 	*/
+	    return (NIL);
+	}
+    }
+}
+#endif
+
+BOOL
+http_response_parse(struct http_response *response)
+{
+    while (response->state != RESPONSE_COMPLETE) {
+        switch (response->state) {
+	case RESPONSE_INIT:
+            http_response_parse_headers_init(response);
+	    break;
+
+	case RESPONSE_HDRS:
+	    if (http_response_parse_headers(response) == NIL)
+	        return NIL;
+	    // temporary test, remove me
+	    response->state = RESPONSE_COMPLETE;
+	    //if (http_response_parse_body_init(response) == NIL)
+	    //    return NIL;
+	    break;
+
+	case RESPONSE_BODY:
+	   // if (http_response_parse_body(response) == NIL)
+	   //     return NIL;
+	   // response->state = RESPONSE_COMPLETE;
+	    break;
+
+	case RESPONSE_COMPLETE:
+	    break;
+	}
+    }
+
+    response->state = RESPONSE_COMPLETE;
+    return (T);
+}
+// prayer
+
+#if 0
+struct uri *
+uri_create(struct pool *pool)
+{
+	struct uri *uri = pool_alloc(pool, sizeof(struct uri));
+
+	memset(uri, 0, sizeof(struct uri));
+	uri->pool = pool;
 
 	uri->fd = -1;
 
@@ -70,61 +259,46 @@ uri_new(void)
 }
 
 void
-uri_free(struct uri *uri, int i)
+uri_free(struct uri *uri)
 {
 	if (uri->fd != -1)
 		close(uri->fd);
-	if (uri->url_host != NULL)
-		free(uri->url_host);
-	if (uri->url_file != NULL)
-		free(uri->url_file);
-	if (uri->header != NULL)
-		free(uri->header);
-	if (uri->body != NULL)
-		free(uri->body);
-	if (uri->format != NULL)
-		free(uri->format);
-	free(uri);
+	pool_free(uri->pool);
 }
 
 int
-http_setuseragent(char *name)
+http_setuseragent(struct uri *uri, char *name)
 {
-	char agent[1024];
+	struct str *str = str_create(uri->pool, 0);
 
-	if (useragent != NULL)
-		free(useragent);
-
-	snprintf(agent, sizeof (agent), "User-Agent: %s\r\n", name);
-	useragent = strdup(agent);
-
-	return (useragent != NULL ? 0 : -1);
+	str_printf(str, "User-Agent: %s\r\n", name);
+	if ((uri->user_agent = str_fetch(str)) == NULL)
+		return (-1);
+	return (0);
 }
 
 /* The file descriptor needs to be connected */
-void
-http_fetch(struct uri *uri)
+int
+http_request(struct uri *uri)
 {
-	char request[1024];
+	struct str *str = str_create(uri->pool, 0);
 	char sport[NI_MAXSERV];
 
 	/* fprintf(stdout, "Fetching: %s:%d %s\n", host, port, file); */
 	snprintf(sport, sizeof(sport), "%d", uri->url_port);
 
-	snprintf(request, sizeof(request),
-	    "%s %s HTTP/1.0\r\n"
+	str_printf(str, "%s %s HTTP/1.0\r\n"
 	    "%s"
 	    "Host: %s%s%s\r\n\r\n",
 	    uri->flags & HTTP_REQUEST_GET ? "GET" : "HEAD", uri->url_file,
-	    useragent != NULL ? useragent : "",
+	    uri->user_agent,
 	    uri->url_host,
 	    uri->url_port != HTTP_DEFAULTPORT ? ":" : "",
 	    uri->url_port != HTTP_DEFAULTPORT ? sport : "");
 
-	    printf("=======================================\n");
-	    printf("%s\n", request);
-	    printf("=======================================\n");
-	    atomicio(write, uri->fd, request, strlen(request));
+	if ((uri->request = str_fetch(str)) == NULL)
+		return (-1);
+	return (0);
 }
 
 /* Separated host, port and file from URI */
@@ -183,8 +357,10 @@ http_hostportfile(char *url, char **phost, u_short *pport, char **pfile)
 }
 
 struct uri *
-http_add(u_short type, char *url)
+http_add(u_short type, char *url, char *useragent)
 {
+	struct pool *pool = pool_create(1024);
+
 	struct uri *uri;
 	u_short port;
 	char *host, *file;
@@ -193,89 +369,46 @@ http_add(u_short type, char *url)
 
 	if (http_hostportfile(url, &host, &port, &file) == -1) {
 		fprintf(stderr, "%s: illegal url: %s\n", __func__, url);
+		pool_free(pool);
 		return (NULL);
 	}
 
-	if ((uri = uri_new()) == NULL) {
+	if ((uri = uri_create(pool)) == NULL) {
 		warn("%s: malloc", __func__);
 		return (NULL);
 	}
 
-	uri->url_host = strdup(host);
-	uri->url_file = strdup(file);
+	if (http_setuseragent(uri, useragent) == -1) {
+		goto fail;
+	}
+
+	uri->url_host = host;
+	uri->url_file = file;
 	uri->url_port = port;
-	if (uri->url_host == NULL || uri->url_file == NULL) {
-		warn("%s: malloc", __func__);
-		uri_free(uri, 0);
-		return (NULL);
-	}
 
 	/* GET or HEAD */
 	uri->flags = type;
 
 	return (uri);
+
+fail:
+	warn("%s: malloc", __func__);
+	uri_free(uri);
+	return (NULL);
 }
 
 void
-http_readheader(struct uri *uri)
+http_readresponse(struct uri *uri)
 {
-	char line[20048], *p;
-	ssize_t n, offset;
-
-	n = read(uri->fd, line, sizeof(line));
-	if (n == -1) {
-		if (errno == EINTR || errno == EAGAIN)
-			return;
-		warn("%s: read", __func__);
-		uri_free(uri, URI_CLEANCONNECT);
-
-		return;
-	} else if (n == 0) {
-		/* Uhm dum */
-		fprintf(stderr, "%s: finished read on http://%s%s?\n",
-		    __func__, uri->url_host, uri->url_file);
-
-		uri_free(uri, URI_CLEANCONNECT);
-		return;
-	}
-
-	p = realloc(uri->header, uri->hdlen + n + 1);
-	if (p == NULL) {
-		warn("%s: realloc", __func__);
-		uri_free(uri, URI_CLEANCONNECT);
-
-		return;
-	}
-
-	uri->header = p;
-	memcpy(uri->header + uri->hdlen, line, n);
-	uri->hdlen += n;
-	uri->header[uri->hdlen] = '\0';
+	char *p;
 
 	p = strstr(uri->header, HTTP_HEADEREND);
-	/*
-	if (p == NULL)
-		goto readmore;
-		*/
 
-	offset = p + strlen(HTTP_HEADEREND) - uri->header;
+	uri->body = pool_alloc(uri->pool, strlen(p) + 1);
+	memcpy(uri->body, p, strlen(p));
+	uri->body[strlen(p) + 1] = '\0';
 
-	if (offset < uri->hdlen) {
-		uri->bdlen = uri->hdlen - offset;
-		uri->body = malloc(uri->bdlen + 1);
-		if (uri->body == NULL) {
-			warn("%s: malloc", __func__);
-			uri_free(uri, URI_CLEANCONNECT);
-
-			return;
-		}
-		memcpy(uri->body, uri->header + offset, uri->bdlen);
-		uri->body[uri->bdlen] = '\0';
-
-		/* Adjust header */
-		uri->hdlen = offset;
-		uri->header[offset] = '\0';
-	}
+	*p = '\0';
 
 	http_parseheader(uri);
 	return;
@@ -302,7 +435,7 @@ http_parseheader(struct uri *uri)
 		fprintf(stderr, "%s: illegal header in http://%s%s\n",
 		    __func__, uri->url_host, uri->url_file);
 
-		uri_free(uri, URI_CLEANCONNECT);
+		uri_free(uri);
 		return;
 	}
 
@@ -317,7 +450,7 @@ http_parseheader(struct uri *uri)
 			fprintf(stderr, "%s: illegal header in http://%s%s\n",
 			    __func__, uri->url_host, uri->url_file);
 
-			uri_free(uri, URI_CLEANCONNECT);
+			uri_free(uri);
 			return;
 		}
 
@@ -339,11 +472,14 @@ http_parseheader(struct uri *uri)
 
 	if (type != NULL) {
 		end = strstr(type, "\r\n");
-
+/* koue
 		uri->format = malloc(end - type + 1);
+		*/
+		uri->format = pool_alloc(uri->pool, end - type + 1);
+
 		if (uri->format == NULL) {
 			warn("%s: malloc", __func__);
-			uri_free(uri, URI_CLEANCONNECT);
+			uri_free(uri);
 			return;
 		}
 
@@ -366,10 +502,12 @@ http_parseheader(struct uri *uri)
 
 		p = location;
 		end = strstr(p, "\r\n");
-
+/* koue
 		if ((location = malloc(end - p + 1)) == NULL) {
+		*/
+		if ((location = pool_alloc(uri->pool, end - p + 1)) == NULL) {
 			warn("%s: malloc", __func__);
-			uri_free(uri, URI_CLEANCONNECT);
+			uri_free(uri);
 			return;
 		}
 
@@ -380,7 +518,7 @@ http_parseheader(struct uri *uri)
 //		(*http_movecb)(uri, location);
 
 		free(location);
-		uri_free(uri, URI_CLEANCONNECT);
+		uri_free(uri);
 		return;
 
 	default:
@@ -393,99 +531,10 @@ http_parseheader(struct uri *uri)
 //		return;
 //	}
 
- conturi:
-
-	if (uri->length != -1) {
-		size_t len;
-		u_char *p;
-
-		len = uri->length;
-		if (len > HTTP_MAXMEM)
-			len = HTTP_MAXMEM;
-
-		p = realloc(uri->body, len + 1);
-		if (p == NULL) {
-			warn("%s: malloc", __func__);
-			uri_free(uri, URI_CLEANCONNECT);
-			return;
-		}
-		uri->body = p;
-		uri->body[len] = '\0';
-		uri->bdmemlen = len;
-		uri->bdread = uri->bdlen;
-	}
-
 	return;
 
  error:
-	uri_free(uri, URI_CLEANCONNECT);
-	return;
-}
-
-void
-http_readbody(struct uri *uri)
-{
-	ssize_t n;
-	u_char *where;
-	ssize_t len;
-
-	if (uri->length == -1) {
-		where = body;
-		len = sizeof(body);
-	} else {
-		where = uri->body + uri->bdread;
-		len = uri->length - uri->bdlen;
-		if (len > uri->bdmemlen - uri->bdread)
-			len = uri->bdmemlen - uri->bdread;
-	}
-
-	n = read(uri->fd, where, len);
-	if (n == -1) {
-	//	if (errno == EINTR || errno == EAGAIN)
-	//		goto readmore;
-		warn("%s: read", __func__);
-		uri_free(uri, URI_CLEANCONNECT);
-
-		return;
-	} else if (n == 0) {
-		if (uri->length != -1 &&
-		    uri->length != uri->bdlen) {
-			fprintf(stderr, "%s: short read on http://%s%s\n",
-			    __func__, uri->url_host, uri->url_file);
-			uri_free(uri, URI_CLEANCONNECT);
-			return;
-		}
-
-		uri->length = uri->bdlen;
-		goto done;
-	}
-
-	if (uri->length == -1) {
-		u_char *p;
-
-		p = realloc(uri->body, uri->bdlen + n + 1);
-		if (p == NULL) {
-			warn("%s: realloc", __func__);
-			uri_free(uri, URI_CLEANCONNECT);
-
-			return;
-		}
-
-		uri->body = p;
-		memcpy(uri->body + uri->bdlen, body, n);
-		uri->bdlen += n;
-		uri->body[uri->bdlen] = '\0';
-	} else {
-		uri->bdlen += n;
-		uri->bdread += n;
-	}
-
-//	if (uri->length == -1 || uri->bdlen < uri->length)
-//		goto readmore;
-
-	/* We are done with this document */
-
- done:
+	uri_free(uri);
 	return;
 }
 
@@ -617,3 +666,5 @@ http_make_url(struct url *url)
 
 	return (output);
 }
+
+#endif

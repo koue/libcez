@@ -4,6 +4,7 @@
 
 #ifndef _CEZ_CORE_H
 #define _CEZ_CORE_H
+#pragma once
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -124,3 +125,4 @@ void *str_fetch(struct str *s);
 #endif // CORE_POOL_ONLY
 
 #endif
+

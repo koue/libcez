@@ -28,36 +28,58 @@
  *
  */
 
-#include <stdarg.h>
 #include <stdio.h>
 
-#include "cez_test.h"
+#include "cez_core_pool.h"
+#include "cez_core_assoc.h"
+#include "cez_core_buffer.h"
+#include "cez_core_string.h"
+
+#include "cez_net.h"
 #include "cez_net_http.h"
-#include "cez_prayer.h"
+
+#define HTTP_RESPONSE 65536
 
 void
-http_connect(struct uri *uri)
+http_connect(struct http_response *response)
 {
-	uri->fd = os_connect_inet_socket(uri->url_host, uri->url_port);
+    struct buffer *b = response->read_buffer;
+    struct iostream *stream;
+    int c, count = 1, fd;
+    char request[1024];
+
+    snprintf(request, sizeof(request),
+                  "GET /index.html HTTP/1.0\r\n"
+		  "hresp"
+		  "Host: chaosophia.net\r\n\r\n");
+
+    fd = os_connect_inet_socket("chaosophia.net", 80);
+    printf("fd %d\n", fd);
+    stream = iostream_create(response->pool, fd, 0);
+
+    iostream_set_timeout(stream, 10);
+
+    ioprintf(stream, request);
+    ioflush(stream);
+
+    while (((c = iogetc(stream)) != EOF) && (++count < HTTP_RESPONSE)) {
+      //  printf("%c", c);
+        bputc(b, c);
+    }
+    printf("count %d\n", count);
+    iostream_close(stream);
+    close(fd);
 }
 
 int
 main(void)
 {
-	char *s = "http://chaosophia.net/papers/luks_tpm_and_full_disk_encryption_without_password.html";
-	struct uri *uri;
+    struct http_response *response;
 
-	cez_test_start();
+    response = http_response_create();
+    http_connect(response);
+    http_response_parse(response);
+    http_response_free(response);
 
-	assert(http_setuseragent("htf 0.1") != -1);
-	assert((uri = http_add(HTTP_REQUEST_GET, s)) != NULL);
-	http_connect(uri);
-	http_fetch(uri);
-	http_readheader(uri);
-	http_readbody(uri);
-//	assert(strcmp(uri->body, "</html>") == 0);
-	printf("%s\n", uri->body);
-	uri_free(uri, 0);
-
-	return (0);
+    return (0);
 }

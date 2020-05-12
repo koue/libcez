@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,30 +28,35 @@
  *
  */
 
-#ifndef _CEZ_CGI_H
-#define _CEZ_CGI_H
+#include <stdarg.h>
 
-#include <cez_core_pool.h>
+#include "cez_core_pool.h"
+#include "cez_core_assoc.h"
+#include "cez_test.h"
 
-struct cez_cgi {
-	struct pool *pool;
-	const char *http_host;
-	const char *https;
-	const char *path_info;
-	const char *query_string;
-	const char *request_method;
-	const char *script_name;
-	const char *server_name;
-	const char *server_port;
-	const char *http_cookie;
-	const char *http_referer;
-	const char *user_agent;
-	unsigned int content_length;
+struct item {
+	struct pool *pool;	/* Allocation pool */
+	struct assoc *assoc;	/* Associative array for fast lookups */
 };
 
-void cez_cgi_free(struct cez_cgi *cgi);
+int
+main(void)
+{
+	struct pool *pool = pool_create(1024);
+	struct item *i;
 
-struct cez_cgi *cez_cgi_create(void);
+	cez_test_start();
+	i = pool_alloc(pool, sizeof(struct item));
+	i->pool = pool;
+	i->assoc = assoc_create(pool, 16, T);
+	/* Add word to assoc chain */
+	assoc_update(i->assoc, "first", "1", NIL);
+	assoc_update(i->assoc, "second", "1", NIL);
+	assoc_update(i->assoc, "third", "1", NIL);
+	assert(assoc_lookup(i->assoc, "second") != NULL);
+	assoc_delete(i->assoc, "second");
+	assert(assoc_lookup(i->assoc, "second") == NULL);
+	pool_free(i->pool);
 
-#endif
-
+	return (0);
+}

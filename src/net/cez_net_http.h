@@ -1,4 +1,5 @@
 /*
+ * Copyright 2020 Nikola Kolev <koue@chaosophia.net>
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
  *
@@ -33,6 +34,7 @@
 #ifndef _HTTP_H_
 #define _HTTP_H_
 
+#if 0
 #define HTTP_MAXRETRY		3
 #define HTTP_MAXCONNECTS	20
 #define HTTP_CONNECT_TIMEOUT	50
@@ -60,7 +62,61 @@
 #define url_host	url.host
 #define url_file	url.file
 #define url_port	url.port
+#endif
 
+//prayer
+#define RESPONSE_PREFERRED_BLOCK_SIZE (8192)
+
+typedef enum {
+    RESPONSE_INIT,
+    RESPONSE_HDRS,
+    RESPONSE_BODY,
+    RESPONSE_COMPLETE
+} RESPONSE_STATE;
+
+struct http_response {
+    /* Common */
+    struct pool *pool;		/* Allocate memory from this pool	*/
+
+    /* Input buffer */
+    struct buffer *read_buffer;	/* Incoming response 			*/
+
+    RESPONSE_STATE state;	/* State of current response 		*/
+    unsigned long hdrs_offset;	/* Offset to hdrs in read_buffer	*/
+    unsigned long hdrs_size;	/* Size of hdrs in read_buffer		*/
+    unsigned long hdrs_max_size;/* Max size of hdrs in read_buffer	*/
+    unsigned long hdrs_crlfs;	/* Number of CRLF in header		*/
+    unsigned long body_offset;	/* Offset to body in read_buffer	*/
+    unsigned long body_size;	/* Size of body in read_buffer		*/
+    unsigned long body_max_size;/* Max size of body in read_buffer	*/
+    BOOL preserve;		/* Preserve headers			*/
+    BOOL iseof;			/* Reached EOF				*/
+    BOOL error;			/* Response generated error		*/
+
+    /* Request */
+    char *url;			/* Request URL				*/
+    char *url_host;		/* Host component in request URL	*/
+    char *url_port;		/* Port component in request URL	*/
+    char *url_path;		/* Path component in request URL	*/
+
+    /* Response header */
+    struct assoc *hdrs;		/* Headers used in this response	*/
+
+    /* Response information */
+    unsigned long status;	/* Status of this response */
+};
+
+struct http_response *http_response_create(void);
+
+void http_response_free(struct http_response *response);
+
+BOOL http_response_parse(struct http_response *response);
+
+BOOL http_response_complete(struct http_response *response);
+
+//prayer
+
+#if 0
 struct url {
 	char *host;
 	char *file;
@@ -75,6 +131,8 @@ struct uri {
 
 	struct url url;
 
+	char *request;
+
 	char *format;
 	ssize_t length;
 
@@ -87,6 +145,9 @@ struct uri {
 	size_t bdlen;
 
 	int fd;
+
+	char *user_agent;
+	struct pool *pool;
 };
 
 struct header {
@@ -95,14 +156,15 @@ struct header {
 };
 
 struct uri *uri_new(void);
-void uri_free(struct uri *, int);
+void uri_free(struct uri *);
 
-struct uri *http_add(unsigned short, char *);
+struct uri *http_add(unsigned short, char *, char *);
 
-int http_setuseragent(char *);
+int http_setuseragent(struct uri *, char *);
 
-void http_fetch(struct uri *uri);
+int http_request(struct uri *uri);
 int http_hostportfile(char *, char **, unsigned short *, char **);
+void http_readresponse(struct uri *);
 void http_parseheader(struct uri *);
 void http_readheader(struct uri *);
 void http_readbody(struct uri *);
@@ -115,5 +177,6 @@ char *http_basename(struct uri *);
 char *http_make_uri(char *, char *);
 
 char *http_make_url(struct url *);
+#endif
 
 #endif /* _HTTP_H_ */

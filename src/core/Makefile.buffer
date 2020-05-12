@@ -1,0 +1,15 @@
+#
+MK_PROFILE=	no
+LOCALBASE?=	/usr/local
+LIB=            cezcorebuffer
+LIBDIR=		${LOCALBASE}/lib
+INCSDIR=	${LOCALBASE}/include
+CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
+SRCS=		buffer.c \
+		cez_core_buffer.h
+
+INCS=		cez_core_buffer.h
+
+NO_OBJ=         yes
+
+.include <bsd.lib.mk>

@@ -1,0 +1,15 @@
+#
+MK_PROFILE=	no
+LOCALBASE?=	/usr/local
+LIB=            cezcoreassoc
+LIBDIR=		${LOCALBASE}/lib
+INCSDIR=	${LOCALBASE}/include
+CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
+SRCS=		assoc.c \
+		cez_core_assoc.h
+
+INCS=		cez_core_assoc.h
+
+NO_OBJ=         yes
+
+.include <bsd.lib.mk>

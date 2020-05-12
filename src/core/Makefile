@@ -1,21 +1,20 @@
 #
-MK_PROFILE=	no
-LOCALBASE?=	/usr/local
-LIB=            cezcore
-LIBDIR=		${LOCALBASE}/lib
-INCSDIR=	${LOCALBASE}/include
-CFLAGS+=        -Wall -Wstrict-prototypes -I${.CURDIR}
-SRCS=		pool.c \
-		cez_core.h
-.ifndef CORE_POOL_ONLY
-SRCS+=		misc.c \
-		str.c
-.else
-CFLAGS+= -DCORE_POOL_ONLY
-.endif
+all: pool assoc buffer string
 
-INCS=		cez_core.h
+pool:
+	make -f Makefile.pool
 
-NO_OBJ=         yes
+assoc:
+	make -f Makefile.assoc
 
-.include <bsd.lib.mk>
+buffer:
+	make -f Makefile.buffer
+
+string:
+	make -f Makefile.string
+
+cleandir:
+	make -f Makefile.pool cleandir
+	make -f Makefile.assoc cleandir
+	make -f Makefile.buffer cleandir
+	make -f Makefile.string cleandir

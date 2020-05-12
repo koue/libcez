@@ -30,8 +30,8 @@
 
 #include <stdarg.h>
 
-#include "cez_core.h"
-#include "cez_prayer.h"
+#include "cez_core_pool.h"
+#include "cez_net.h"
 #include "cez_test.h"
 
 #define POOLSIZE 131072

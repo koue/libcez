@@ -2,6 +2,10 @@
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
+#ifndef _CEZ_CORE_ASSOC
+#define _CEZ_CORE_ASSOC
+#pragma once
+
 /* Associative Arrays */
 
 struct assoc_list {             /* Single magazine for hash table */
@@ -35,3 +39,6 @@ void *assoc_lookup(struct assoc *h, char *key);
 void assoc_scan_reset(struct assoc *h);
 
 BOOL assoc_scan_next(struct assoc *h, char **keyp, void **valuep);
+
+#endif
+

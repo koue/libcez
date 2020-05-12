@@ -1,0 +1,34 @@
+#
+MK_PROFILE=	no
+LOCALBASE?=	/usr/local
+LIB=		ceznet
+LIBDIR=		${LOCALBASE}/lib
+INCSDIR=	${LOCALBASE}/include
+
+CFLAGS+=	-Wall -Wstrict-prototypes \
+		-I${.CURDIR} \
+		-I${.CURDIR}/../core
+
+SRCS=		iostream.c \
+		ipaddr.c \
+		os.c \
+		cez_net.h \
+		cez_net_iostream.h \
+		cez_net_ipaddr.h \
+		cez_net_os.h
+
+.ifdef NOSSL
+SRCS+=		no_ssl.c
+.else
+SRCS+=		ssl.c
+.endif
+
+INCS=		cez_net.h \
+		cez_net_iostream.h \
+		cez_net_ipaddr.h \
+		cez_net_os.h \
+		cez_net_ssl.h
+
+NO_OBJ=		yes
+
+.include <bsd.lib.mk>

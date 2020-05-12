@@ -1,17 +1,16 @@
 #
 LOCALBASE?=	/usr/local
-PROGS=		assoc_test \
-		os_test \
-		template_test
+PROGS=		template_test
 
 CFLAGS=		-I${.CURDIR}/../../src/core \
+		-I${.CURDIR}/../../src/net \
 		-I${.CURDIR}/../../src/prayer \
 		-I${.CURDIR}/../
 
 LDFLAGS+=	-L${.CURDIR}/../../src/core \
 		-L${.CURDIR}/../../src/prayer
 
-LDADD=		-lcezprayer -lcezcore -lutil -liconv
+LDADD=		-lcezprayer -lcezcorepool -lcezcorebuffer -lcezcorestring -lcezcoreassoc -lutil -liconv
 
 .ifndef NOSSL
 # libressl
@@ -30,8 +29,6 @@ MAKEOBJDIR= .
 install:
 
 test:
-	./assoc_test
-	./os_test
 	./template_test
 
 .include <bsd.progs.mk>

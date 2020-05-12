@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,30 +28,34 @@
  *
  */
 
-#ifndef _CEZ_CGI_H
-#define _CEZ_CGI_H
+#ifndef _CEZ_NET_H
+#define _CEZ_NET_H
 
-#include <cez_core_pool.h>
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <grp.h>
+#include <netdb.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <syslog.h>
+#include <pwd.h>
+#include <unistd.h>
 
-struct cez_cgi {
-	struct pool *pool;
-	const char *http_host;
-	const char *https;
-	const char *path_info;
-	const char *query_string;
-	const char *request_method;
-	const char *script_name;
-	const char *server_name;
-	const char *server_port;
-	const char *http_cookie;
-	const char *http_referer;
-	const char *user_agent;
-	unsigned int content_length;
-};
+#include "cez_core_pool.h"
+#include "cez_core_assoc.h"
+#include "cez_core_buffer.h"
+#include "cez_core_string.h"
 
-void cez_cgi_free(struct cez_cgi *cgi);
-
-struct cez_cgi *cez_cgi_create(void);
+#include "cez_net_ssl.h"
+#include "cez_net_iostream.h"
+#include "cez_net_ipaddr.h"
+#include "cez_net_os.h"
 
 #endif
-
