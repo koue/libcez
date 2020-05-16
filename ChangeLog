@@ -1,3 +1,9 @@
+20200516:
+
+  Move networking related functions from prayer to net.
+  Add http functions to net.
+  Add log functions.
+
 20200422:
 
   Add core functions.
