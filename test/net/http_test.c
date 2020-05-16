@@ -38,15 +38,14 @@
 #include "cez_net.h"
 #include "cez_net_http.h"
 
-#define HTTP_RESPONSE 65536
-
-void
-http_connect(struct http_response *response)
+int
+main(void)
 {
-    struct buffer *b = response->read_buffer;
+    struct pool *pool = pool_create(1024);
     struct iostream *stream;
-    int c, count = 1, fd;
-    char request[1024];
+    struct http_response *response;
+    int fd;
+    char request[1024], *body;
 
     snprintf(request, sizeof(request),
                   "GET /index.html HTTP/1.0\r\n"
@@ -54,32 +53,27 @@ http_connect(struct http_response *response)
 		  "Host: chaosophia.net\r\n\r\n");
 
     fd = os_connect_inet_socket("chaosophia.net", 80);
-    printf("fd %d\n", fd);
-    stream = iostream_create(response->pool, fd, 0);
-
+    stream = iostream_create(pool, fd, 0);
     iostream_set_timeout(stream, 10);
+
+    response = http_response_create(stream);
 
     ioprintf(stream, request);
     ioflush(stream);
 
-    while (((c = iogetc(stream)) != EOF) && (++count < HTTP_RESPONSE)) {
-      //  printf("%c", c);
-        bputc(b, c);
+    http_response_parse(response);
+    printf("status: %lu\n", response->status);
+    if (response->status == 200) {
+        body = buffer_fetch(response->read_buffer, response->body_offset,
+	                    response->body_size, 0);
+	printf("==============================================\n");
+	printf("%s", body);
     }
-    printf("count %d\n", count);
+    http_response_free(response);
+
     iostream_close(stream);
     close(fd);
-}
-
-int
-main(void)
-{
-    struct http_response *response;
-
-    response = http_response_create();
-    http_connect(response);
-    http_response_parse(response);
-    http_response_free(response);
+    pool_free(pool);
 
     return (0);
 }

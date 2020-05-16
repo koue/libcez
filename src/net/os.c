@@ -2,10 +2,10 @@
 /* Copyright (c) University of Cambridge 2000 - 2010 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_net.h"
-
 #include <sys/param.h>
-#include "cez_prayer_os_bsd.h"
+
+#include "cez_net.h"
+#include "cez_net_bsd.h"
 
 /* ====================================================================== */
 

@@ -13,6 +13,7 @@ SRCS=		iostream.c \
 		ipaddr.c \
 		os.c \
 		cez_net.h \
+		cez_net_bsd.h \
 		cez_net_iostream.h \
 		cez_net_ipaddr.h \
 		cez_net_os.h
@@ -24,6 +25,7 @@ SRCS+=		ssl.c
 .endif
 
 INCS=		cez_net.h \
+		cez_net_bsd.h \
 		cez_net_iostream.h \
 		cez_net_ipaddr.h \
 		cez_net_os.h \
