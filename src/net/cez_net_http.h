@@ -33,7 +33,45 @@
 #ifndef _CEZ_NET_HTTP_H
 #define _CEZ_NET_HTTP_H
 
-#define RESPONSE_PREFERRED_BLOCK_SIZE (8192)
+#define HTTP_PREFIX "http://"
+#define HTTPS_PREFIX "https://"
+
+#define HTTP_PORT 80
+#define HTTPS_PORT 443
+
+#define HTTP_REQUEST_BLOCK_SIZE (8192)
+#define HTTP_RESPONSE_BLOCK_SIZE (8192)
+
+typedef enum {
+    REQUEST_OK = 1,
+    REQUEST_INVALID_URL,
+    REQUEST_INVALID_PORT,
+    REQUEST_CONNECTION_ERROR
+} REQUEST_STATUS;
+
+struct http_request {
+    /* Common */
+    struct pool *pool;
+    struct iostream *stream;
+    int fd;
+
+    /* Request */
+    char *url;			/* Request URL				*/
+    char *url_host;		/* Host component in request URL	*/
+    int url_port;		/* Port component in request URL	*/
+    char *url_path;		/* Path component in request URL	*/
+
+    unsigned long timeout;	/* Request timeout */
+    unsigned long status;	/* Request status */
+
+    int xerrno;
+    BOOL isssl;
+};
+
+char *http_request_status_text(unsigned long code);
+struct http_request *http_request_create(char *url);
+BOOL http_request_send(struct http_request *request);
+void http_request_free(struct http_request *request);
 
 typedef enum {
     RESPONSE_INIT,
@@ -63,12 +101,6 @@ struct http_response {
     BOOL iseof;			/* Reached EOF				*/
     BOOL error;			/* Response generated error		*/
 
-    /* Request */
-    char *url;			/* Request URL				*/
-    char *url_host;		/* Host component in request URL	*/
-    char *url_port;		/* Port component in request URL	*/
-    char *url_path;		/* Path component in request URL	*/
-
     /* Response header */
     struct assoc *hdrs;		/* Headers used in this response	*/
 
@@ -78,12 +110,10 @@ struct http_response {
     unsigned long status_max_size; /* Max size of status line */
 };
 
-struct http_response *http_response_create(struct iostream *stream);
-
+struct http_response *http_response_create(struct http_request *request);
 void http_response_free(struct http_response *response);
-
 BOOL http_response_parse(struct http_response *response);
-
+char *http_response_print_body(struct http_response *response);
 BOOL http_response_complete(struct http_response *response);
 
 #endif /* _HTTP_H_ */

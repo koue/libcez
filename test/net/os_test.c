@@ -63,7 +63,7 @@ test_os_connect_inet_socket_http(struct pool *p, struct buffer *b)
 	char *host = "chaosophia.net";
 	struct iostream *stream;
 
-	assert(sockfd = os_connect_inet_socket(host, HTTP_PORT));
+	assert((sockfd = os_connect_inet_socket(host, HTTP_PORT)) != -1);
 	assert(stream = iostream_create(p, sockfd, 0));
 
 	iostream_set_timeout(stream, IO_TIMEOUT);
@@ -92,7 +92,7 @@ test_os_connect_inet_socket_https(struct pool *p, struct buffer *b)
 	char *host = "www.openbsd.org";
 	struct iostream *stream;
 
-	assert(sockfd = os_connect_inet_socket(host, HTTPS_PORT));
+	assert((sockfd = os_connect_inet_socket(host, HTTPS_PORT)) != -1);
 	assert(stream = iostream_create(p, sockfd, 0));
 
 	iostream_set_timeout(stream, IO_TIMEOUT);

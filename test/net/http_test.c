@@ -29,51 +29,94 @@
  */
 
 #include <stdio.h>
-
-#include "cez_core_pool.h"
-#include "cez_core_assoc.h"
-#include "cez_core_buffer.h"
-#include "cez_core_string.h"
+#include <string.h>
 
 #include "cez_net.h"
 #include "cez_net_http.h"
 
+#include "cez_test.h"
+
 int
 main(void)
 {
-    struct pool *pool = pool_create(1024);
-    struct iostream *stream;
+    struct http_request *request;
     struct http_response *response;
-    int fd;
-    char request[1024], *body;
 
-    snprintf(request, sizeof(request),
-                  "GET /index.html HTTP/1.0\r\n"
-		  "hresp"
-		  "Host: chaosophia.net\r\n\r\n");
+    cez_test_start();
 
-    fd = os_connect_inet_socket("chaosophia.net", 80);
-    stream = iostream_create(pool, fd, 0);
-    iostream_set_timeout(stream, 10);
+    // Valid HTTP URL
+    assert((request = http_request_create("http://chaosophia.net/")) != NULL);
+    assert(strcmp(request->url_host, "chaosophia.net") == 0);
+    assert(request->url_port == HTTP_PORT);
+    assert(strcmp(request->url_path, "") == 0);
+    assert(request->status == REQUEST_OK);
+    http_request_free(request);
 
-    response = http_response_create(stream);
+    assert((request = http_request_create("http://chaosophia.net:8080/my.html")) != NULL);
+    assert(strcmp(request->url_host, "chaosophia.net") == 0);
+    assert(request->url_port == 8080);
+    assert(strcmp(request->url_path, "my.html") == 0);
+    assert(request->status == REQUEST_OK);
+    http_request_free(request);
 
-    ioprintf(stream, request);
-    ioflush(stream);
+    // Valid HTTPS URL
+    assert((request = http_request_create("https://chaosophia.net/")) != NULL);
+    assert(strcmp(request->url_host, "chaosophia.net") == 0);
+    assert(request->url_port == HTTPS_PORT);
+    assert(strlen(request->url_path) == 0);
+    assert(request->status == REQUEST_OK);
+    http_request_free(request);
 
-    http_response_parse(response);
-    printf("status: %lu\n", response->status);
-    if (response->status == 200) {
-        body = buffer_fetch(response->read_buffer, response->body_offset,
-	                    response->body_size, 0);
-	printf("==============================================\n");
-	printf("%s", body);
-    }
+    assert((request = http_request_create("HTTPS://chaosophia.net:8443/1/2.html")) != NULL);
+    assert(strcmp(request->url_host, "chaosophia.net") == 0);
+    assert(request->url_port == 8443);
+    assert(strcmp(request->url_path, "1/2.html") == 0);
+    assert(request->status == REQUEST_OK);
+    http_request_free(request);
+
+    // Invalid HTTP URL
+    assert((request = http_request_create("xhttp://chaosophia.net")) != NULL);
+    assert(request->status == REQUEST_INVALID_URL);
+    http_request_free(request);
+
+    assert((request = http_request_create("http://chaosophia.net::")) != NULL);
+    assert(request->status == REQUEST_INVALID_PORT);
+    http_request_free(request);
+
+    // Connection refused
+    assert((request = http_request_create("http://koue.chaosophia.net/index.html")) != NULL);
+    assert(strcmp(request->url_host, "koue.chaosophia.net") == 0);
+    assert(strcmp(request->url_path, "index.html") == 0);
+    assert(request->url_port == HTTP_PORT);
+    assert(request->status == REQUEST_OK);
+    assert(http_request_send(request) == NIL);
+    assert(request->status == REQUEST_CONNECTION_ERROR);
+    assert(strcmp(http_request_status_text(request->status), "Connection refused"));
+    http_request_free(request);
+
+    // Response 200
+    assert((request = http_request_create("http://chaosophia.net/index.html")) != NULL);
+    assert(strcmp(request->url_host, "chaosophia.net") == 0);
+    assert(strcmp(request->url_path, "index.html") == 0);
+    assert(request->url_port == HTTP_PORT);
+    assert(request->status == REQUEST_OK);
+    assert(http_request_send(request) == T);
+    assert(request->status == REQUEST_OK);
+    assert((response = http_response_create(request)) != NULL);
+    assert(http_response_parse(response) == T);
+    assert(response->status == 200);
+    assert(strcmp(http_response_print_body(response), "</html>"));
     http_response_free(response);
+    http_request_free(request);
 
-    iostream_close(stream);
-    close(fd);
-    pool_free(pool);
+    // Response 404
+    assert((request = http_request_create("http://chaosophia.net/notexistzaq.html")) != NULL);
+    assert(http_request_send(request) == T);
+    assert((response = http_response_create(request)) != NULL);
+    assert(http_response_parse(response) == T);
+    assert(response->status == 404);
+    http_response_free(response);
+    http_request_free(request);
 
     return (0);
 }

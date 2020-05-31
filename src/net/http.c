@@ -51,10 +51,142 @@
 #include "cez_net.h"
 #include "cez_net_http.h"
 
-struct http_response *
-http_response_create(struct iostream *stream)
+char *
+http_request_status_text(unsigned long code)
 {
-    struct pool *p = pool_create(RESPONSE_PREFERRED_BLOCK_SIZE);
+    static struct _RequestStatus {
+        unsigned long status;
+	char *msg;
+    } *msg, msgs[] = {
+        {
+	1, "OK"}
+	, {
+	2, "Invalid URL"}
+	, {
+	3, "Invalid port"}
+	, {
+        000, NULL}
+    };
+
+    msg = msgs;
+
+    while (msg->status <= code)
+        if (msg->status == code)
+	    return(msg->msg);
+	else
+	    msg++;
+
+    return "UNKNOWN";
+}
+
+static BOOL
+http_request_parse_url(struct http_request *request)
+{
+    char *p;
+
+    if (strncasecmp(request->url, HTTPS_PREFIX, strlen(HTTPS_PREFIX)) == 0) {
+        request->isssl = T;
+	request->url_port = HTTPS_PORT;
+        request->url += strlen(HTTPS_PREFIX);
+    } else if (strncasecmp(request->url, HTTP_PREFIX, strlen(HTTP_PREFIX)) == 0) {
+        request->isssl = NIL;
+	request->url_port = HTTP_PORT;
+        request->url += strlen(HTTP_PREFIX);
+    } else {
+        request->status = REQUEST_INVALID_URL;
+	return (NIL);
+    }
+    // TODO: validation?
+    request->url_host = pool_strdup(request->pool, request->url);
+    p = strchr(request->url_host, '/');
+    if (p != NULL) {
+        *p = '\0';
+	request->url_path = pool_strdup(request->pool, p + 1);
+	if ((p = strchr(request->url_path, '#')) != NULL) {
+	    *p = '\0';
+	}
+    } else {
+        request->url_path = NIL;
+    }
+    p = strchr(request->url_host, ':');
+    if (p != NULL) {
+        *p = '\0';
+	request->url_port = atoi(p + 1);
+	if (request->url_port == 0) {
+	    request->status = REQUEST_INVALID_PORT;
+	}
+    }
+
+    return (T);
+}
+
+struct http_request *
+http_request_create(char *url)
+{
+    struct pool *pool = pool_create(HTTP_REQUEST_BLOCK_SIZE);
+    struct http_request *request = pool_alloc(pool, sizeof(struct http_request));
+
+    /* Make sure cleared out */
+    memset(request, 0, sizeof(struct http_request));
+
+    /* Common */
+    request->pool = pool;
+    request->stream = NIL;
+    request->fd = 0;
+
+    request->url = pool_strdup(request->pool, url);
+    request->url_host = NIL;
+    request->url_port = 0;
+    request->url_path = NIL;
+
+    request->timeout = 10;
+    request->status = REQUEST_OK;
+    request->isssl = NIL;
+
+    request->xerrno = 0;
+
+    http_request_parse_url(request);
+
+    return (request);
+}
+
+BOOL
+http_request_send(struct http_request *request)
+{
+    if ((request->fd =
+         os_connect_inet_socket(request->url_host, request->url_port)) == -1) {
+        request->status = REQUEST_CONNECTION_ERROR;
+	request->xerrno = errno;
+	return (NIL);
+    }
+    request->stream = iostream_create(request->pool, request->fd, 0);
+    iostream_set_timeout(request->stream, request->timeout);
+    if (request->isssl) {
+        ssl_client_context_init();
+	iostream_ssl_start_client(request->stream);
+    }
+    ioprintf(request->stream, "GET /%s HTTP/1.0\r\n"
+                              "User-Agent: cezhttp\r\n"
+			      "Host: %s\r\n\r\n",
+			      request->url_path, request->url_host);
+    ioflush(request->stream);
+    return (T);
+}
+
+void
+http_request_free(struct http_request *request)
+{
+    if (request->stream)
+        iostream_close(request->stream);
+    if (request->fd > 0)
+        close(request->fd);
+    pool_free(request->pool);
+}
+
+struct http_response *
+http_response_create(struct http_request *request)
+{
+    struct pool *p = pool_create(HTTP_RESPONSE_BLOCK_SIZE);
     struct http_response *response = pool_alloc(p, sizeof(struct http_response));
 
     /* Make sure cleared out */
@@ -62,7 +194,7 @@ http_response_create(struct iostream *stream)
 
     /* Common */
     response->pool = p;
-    response->stream = stream;
+    response->stream = request->stream;
 
     /* Input buffer */
     response->read_buffer = buffer_create(p, PREFERRED_BUFFER_BLOCK_SIZE);
@@ -79,11 +211,6 @@ http_response_create(struct iostream *stream)
     response->preserve = NIL;
     response->iseof = NIL;
     response->error = NIL;
-
-    response->url = NIL;
-    response->url_host = NIL;
-    response->url_port = NIL;
-    response->url_path = NIL;
 
     response->hdrs = assoc_create(p, 16, T);
 
@@ -313,13 +440,19 @@ http_response_parse_body(struct http_response *response)
     }
     response->body_current = current;
 
-
     if (current < size) {
         response->status = 400; /* Insufficient data */
 	return (NIL);
     }
 
     return (T);
+}
+
+char *
+http_response_print_body(struct http_response *response)
+{
+    return (buffer_fetch(response->read_buffer, response->body_offset,
+                        response->body_size, 0));
 }
 
 BOOL
