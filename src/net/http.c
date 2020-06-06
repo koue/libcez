@@ -51,11 +51,21 @@
 #include "cez_net.h"
 #include "cez_net_http.h"
 
-char *
-http_request_status_text(unsigned long code)
+void
+http_request_timeout_set(struct http_request *request, long timeout)
 {
-    static struct _RequestStatus {
-        unsigned long status;
+    if (timeout > 0)
+        request->timeout = timeout;
+}
+
+char *
+http_request_state_text(long code)
+{
+    if (code < 0)
+        return "UNKNOWN";
+
+    static struct _RequestState {
+        unsigned long state;
 	char *msg;
     } *msg, msgs[] = {
         {
@@ -70,8 +80,8 @@ http_request_status_text(unsigned long code)
 
     msg = msgs;
 
-    while (msg->status <= code)
-        if (msg->status == code)
+    while (msg->state <= code)
+        if (msg->state == code)
 	    return(msg->msg);
 	else
 	    msg++;
@@ -80,7 +90,7 @@ http_request_status_text(unsigned long code)
 }
 
 static BOOL
-http_request_parse_url(struct http_request *request)
+http_request_url_parse(struct http_request *request)
 {
     char *p;
 
@@ -93,7 +103,7 @@ http_request_parse_url(struct http_request *request)
 	request->url_port = HTTP_PORT;
         request->url += strlen(HTTP_PREFIX);
     } else {
-        request->status = REQUEST_INVALID_URL;
+        request->state = HTTP_REQUEST_URL_INVALID;
 	return (NIL);
     }
     // TODO: validation?
@@ -113,15 +123,53 @@ http_request_parse_url(struct http_request *request)
         *p = '\0';
 	request->url_port = atoi(p + 1);
 	if (request->url_port == 0) {
-	    request->status = REQUEST_INVALID_PORT;
+	    request->state = HTTP_REQUEST_PORT_INVALID;
 	}
     }
 
     return (T);
 }
 
+static void
+http_request_header_start(struct http_request *request)
+{
+    struct buffer *buffer = request->hdrs;
+
+    bprintf(buffer, "GET /%s HTTP/1.0" CRLF, request->url_path);
+    bprintf(buffer, "User-Agent: %s" CRLF, request->user_agent);
+    bprintf(buffer, "Host: %s" CRLF, request->url_host);
+}
+
+void
+http_request_header_add(struct http_request *request, const char *key,
+    const char *value)
+{
+    struct buffer *buffer = request->hdrs;
+
+    bprintf(buffer, "%s: %s" CRLF, key, value);
+}
+
+static void
+http_request_header_end(struct http_request *request)
+{
+    struct buffer *buffer = request->hdrs;
+
+    bputs(buffer, "" CRLF);
+}
+
+void
+http_request_header_dump(struct http_request *request)
+{
+    struct buffer *buffer = request->hdrs;
+    int c;
+
+    buffer_rewind(buffer);
+    while ((c = bgetc(buffer)) != EOF)
+        putc(c, stdout);
+}
+
 struct http_request *
-http_request_create(char *url)
+http_request_create(char *url, char *user_agent)
 {
     struct pool *pool = pool_create(HTTP_REQUEST_BLOCK_SIZE);
     struct http_request *request = pool_alloc(pool, sizeof(struct http_request));
@@ -134,18 +182,26 @@ http_request_create(char *url)
     request->stream = NIL;
     request->fd = 0;
 
+    request->hdrs = buffer_create(request->pool, HTTP_REQUEST_HDR_BLOCK_SIZE);
+
     request->url = pool_strdup(request->pool, url);
     request->url_host = NIL;
     request->url_port = 0;
     request->url_path = NIL;
+    if (user_agent == NULL)
+        request->user_agent = pool_strdup(request->pool, "cezhttp");
+    else
+        request->user_agent = pool_strdup(request->pool, user_agent);
 
-    request->timeout = 10;
-    request->status = REQUEST_OK;
+    request->timeout = HTTP_REQUEST_TIMEOUT;
+    request->state = HTTP_REQUEST_OK;
+    request->status = 501;	/* Not implemented */
     request->isssl = NIL;
 
     request->xerrno = 0;
 
-    http_request_parse_url(request);
+    http_request_url_parse(request);
+    http_request_header_start(request);
 
     return (request);
 }
@@ -153,23 +209,31 @@ http_request_create(char *url)
 BOOL
 http_request_send(struct http_request *request)
 {
+    struct buffer *buffer;
+    struct iostream *stream;
+    int c;
+
     if ((request->fd =
          os_connect_inet_socket(request->url_host, request->url_port)) == -1) {
-        request->status = REQUEST_CONNECTION_ERROR;
+        request->state = HTTP_REQUEST_CONNECTION_ERROR;
 	request->xerrno = errno;
 	return (NIL);
     }
-    request->stream = iostream_create(request->pool, request->fd, 0);
-    iostream_set_timeout(request->stream, request->timeout);
+    stream = request->stream = iostream_create(request->pool, request->fd, 0);
+    iostream_set_timeout(stream, request->timeout);
     if (request->isssl) {
         ssl_client_context_init();
-	iostream_ssl_start_client(request->stream);
+	iostream_ssl_start_client(stream);
     }
-    ioprintf(request->stream, "GET /%s HTTP/1.0\r\n"
-                              "User-Agent: cezhttp\r\n"
-			      "Host: %s\r\n\r\n",
-			      request->url_path, request->url_host);
-    ioflush(request->stream);
+
+    http_request_header_end(request);
+
+    buffer = request->hdrs;
+    buffer_rewind(buffer);
+    while ((c = bgetc(buffer)) != EOF)
+        ioputc(c, stream);
+
+    ioflush(stream);
     return (T);
 }
 
@@ -183,40 +247,61 @@ http_request_free(struct http_request *request)
     pool_free(request->pool);
 }
 
+void
+http_response_header_size_set(struct http_response *response, long size)
+{
+    if (size > 0)
+        response->hdrs_max_size = size;
+}
+
+void
+http_response_body_size_set(struct http_response *response, long size)
+{
+    if (size > 0)
+        response->body_max_size = size;
+}
+
+void
+http_response_status_size_set(struct http_response *response, long size)
+{
+    if (size > 0)
+        response->status_max_size = size;
+}
+
 struct http_response *
 http_response_create(struct http_request *request)
 {
-    struct pool *p = pool_create(HTTP_RESPONSE_BLOCK_SIZE);
-    struct http_response *response = pool_alloc(p, sizeof(struct http_response));
+    struct pool *pool = pool_create(HTTP_RESPONSE_BLOCK_SIZE);
+    struct http_response *response = pool_alloc(pool, sizeof(struct http_response));
 
     /* Make sure cleared out */
     memset(response, 0, sizeof(struct http_response));
 
     /* Common */
-    response->pool = p;
+    response->pool = pool;
     response->stream = request->stream;
 
     /* Input buffer */
-    response->read_buffer = buffer_create(p, PREFERRED_BUFFER_BLOCK_SIZE);
-    response->state = RESPONSE_INIT;
+    response->read_buffer = buffer_create(pool, PREFERRED_BUFFER_BLOCK_SIZE);
+    response->state = HTTP_RESPONSE_INIT;
     response->hdrs_offset = 0;
     response->hdrs_size = 0;
-    response->hdrs_max_size = 8048;
+    response->hdrs_max_size = HTTP_RESPONSE_HEADER_MAX_SIZE;
     response->hdrs_crlfs = 1;
     response->body_offset = 0;
     response->body_current = 0;
     response->body_size = 0;
-    response->body_max_size = 8048;
+    response->body_max_size = HTTP_RESPONSE_BODY_MAX_SIZE;
 
     response->preserve = NIL;
     response->iseof = NIL;
     response->error = NIL;
 
-    response->hdrs = assoc_create(p, 16, T);
+    response->hdrs = assoc_create(pool, 16, T);
 
     response->status = 501;	/* Not implemented */
     response->status_size = 0;
-    response->status_max_size = 64;
+    response->status_max_size = HTTP_RESPONSE_STATUS_MAX_SIZE;
 
     return (response);
 }
@@ -228,10 +313,10 @@ http_response_free(struct http_response *response)
 }
 
 static BOOL
-http_response_parse_status(struct http_response *response)
+http_response_status_parse(struct http_response *response)
 {
     struct iostream *stream = response->stream;
-    struct buffer *b = response->read_buffer;
+    struct buffer *buffer = response->read_buffer;
     int c;
     char *token;
     char *status;
@@ -243,7 +328,7 @@ http_response_parse_status(struct http_response *response)
 
     /* Fetch and record characters until end of line */
     while (c != EOF) {
-        bputc(b, c);
+        bputc(buffer, c);
 	if ((maxsize > 0) && (++count >= maxsize)) {
 	    response->status = 413;      /* Request Entity too large */
 	    return (NIL);
@@ -253,7 +338,7 @@ http_response_parse_status(struct http_response *response)
 	c = iogetc(stream);
     }
 
-    response->status_size = buffer_size(b);
+    response->status_size = buffer_size(buffer);
 
     if (c == EOF) {
         /* Record permanent end of file */
@@ -263,7 +348,7 @@ http_response_parse_status(struct http_response *response)
 
     /* Status line is now complete: record and then parse */
     if (response->status_size > 0) {
-        status = buffer_fetch(b, 0, response->status_size - 1,
+        status = buffer_fetch(buffer, 0, response->status_size - 1,
 	                      response->preserve);
     } else {
         /* Bad response */
@@ -293,12 +378,12 @@ http_response_parse_status(struct http_response *response)
 }
 
 static BOOL
-http_response_parse_headers_init(struct http_response *response)
+http_response_header_parse_init(struct http_response *response)
 {
-    struct buffer *b = response->read_buffer;
+    struct buffer *buffer = response->read_buffer;
 
-    response->state = RESPONSE_HDRS;
-    response->hdrs_offset = buffer_size(b);
+    response->state = HTTP_RESPONSE_HDRS;
+    response->hdrs_offset = buffer_size(buffer);
     response->hdrs_size = 0;
     response->hdrs_crlfs = 1;
 
@@ -306,7 +391,7 @@ http_response_parse_headers_init(struct http_response *response)
 }
 
 static BOOL
-http_response_process_headers(struct http_response *response, char *data)
+http_response_header_process(struct http_response *response, char *data)
 {
     char *header, *key, *oldvalue, *value, *s;
 
@@ -349,9 +434,9 @@ http_response_process_headers(struct http_response *response, char *data)
 }
 
 static BOOL
-http_response_parse_headers(struct http_response *response)
+http_response_header_parse(struct http_response *response)
 {
-    struct buffer *b = response->read_buffer;
+    struct buffer *buffer = response->read_buffer;
     struct iostream *stream = response->stream;
     unsigned long crlf_count = response->hdrs_crlfs;
     char *data;
@@ -361,12 +446,12 @@ http_response_parse_headers(struct http_response *response)
 
     /* Record hdrs location first time into loop */
     if (response->hdrs_offset == 0)
-        response->hdrs_offset = buffer_size(b);
+        response->hdrs_offset = buffer_size(buffer);
 
     /* Read in data until end of header block located (CRLFCRLF or just LFLF) */
 
     while ((crlf_count < 2) && ((c = iogetc(stream)) != EOF)) {
-        bputc(b, c);
+        bputc(buffer, c);
 	if ((maxsize > 0) && (++count >= maxsize)) {
 	    response->status = 413;      /* Request Entity too large */
 	    return (NIL);
@@ -383,18 +468,31 @@ http_response_parse_headers(struct http_response *response)
     /* Hdrs now complete */
 
     /* Extract copy of entire header block from buffer */
-    data = buffer_fetch(b, response->hdrs_offset, response->hdrs_size,
+    data = buffer_fetch(buffer, response->hdrs_offset, response->hdrs_size,
                         response->preserve);
 
-    http_response_process_headers(response, data);
+    http_response_header_process(response, data);
     return (T);
 }
 
+void
+http_response_header_dump(struct http_response *response)
+{
+    struct assoc *hdrs = response->hdrs;
+    char *key;
+
+    assoc_scan_reset(hdrs);
+
+    while (assoc_scan_next(hdrs, &key, NIL)) {
+        printf("key: %s, value: %s\n", key, assoc_lookup(hdrs, key));
+    }
+}
+
 static BOOL
-http_response_parse_body_init(struct http_response *response)
+http_response_body_parse_init(struct http_response *response)
 {
     struct iostream *stream = response->stream;
-    struct buffer *b = response->read_buffer;
+    struct buffer *buffer = response->read_buffer;
     char *value;
     unsigned long len;
 
@@ -409,33 +507,33 @@ http_response_parse_body_init(struct http_response *response)
             response->status = 413; 	/* Response too large 	*/
 	    return (NIL);
 	}
-	response->state = RESPONSE_BODY;
-	response->body_offset = buffer_size(b);
+	response->state = HTTP_RESPONSE_BODY;
+	response->body_offset = buffer_size(buffer);
 	response->body_current = 0L;
 	response->body_size = atoi(value);
 	return (T);
     }
 
     /* Response has no body */
-    response->state = RESPONSE_COMPLETE;
+    response->state = HTTP_RESPONSE_COMPLETE;
     return (T);
 }
 
 static BOOL
-http_response_parse_body(struct http_response *response)
+http_response_body_parse(struct http_response *response)
 {
     struct iostream *stream = response->stream;
-    struct buffer *b = response->read_buffer;
+    struct buffer *buffer = response->read_buffer;
     unsigned long current = response->body_current;
     unsigned long size = response->body_size;
     int c = EOF;
 
     /* Record body location and size */
     if (response->body_offset == 0)
-        response->body_offset = buffer_size(b);
+        response->body_offset = buffer_size(buffer);
 
     while ((current < size) && ((c = iogetc(stream)) != EOF)) {
-        bputc(b, c);
+        bputc(buffer, c);
 	current++;
     }
     response->body_current = current;
@@ -449,7 +547,7 @@ http_response_parse_body(struct http_response *response)
 }
 
 char *
-http_response_print_body(struct http_response *response)
+http_response_body_print(struct http_response *response)
 {
     return (buffer_fetch(response->read_buffer, response->body_offset,
                         response->body_size, 0));
@@ -458,31 +556,31 @@ http_response_print_body(struct http_response *response)
 BOOL
 http_response_parse(struct http_response *response)
 {
-    while (response->state != RESPONSE_COMPLETE) {
+    while (response->state != HTTP_RESPONSE_COMPLETE) {
         switch (response->state) {
-	case RESPONSE_INIT:
-	    http_response_parse_status(response);
-            http_response_parse_headers_init(response);
+	case HTTP_RESPONSE_INIT:
+	    http_response_status_parse(response);
+            http_response_header_parse_init(response);
 	    break;
 
-	case RESPONSE_HDRS:
-	    if (http_response_parse_headers(response) == NIL)
+	case HTTP_RESPONSE_HDRS:
+	    if (http_response_header_parse(response) == NIL)
 	        return NIL;
-	    if (http_response_parse_body_init(response) == NIL)
+	    if (http_response_body_parse_init(response) == NIL)
 	        return NIL;
 	    break;
 
-	case RESPONSE_BODY:
-	    if (http_response_parse_body(response) == NIL)
+	case HTTP_RESPONSE_BODY:
+	    if (http_response_body_parse(response) == NIL)
 	        return NIL;
-	    response->state = RESPONSE_COMPLETE;
+	    response->state = HTTP_RESPONSE_COMPLETE;
 	    break;
 
-	case RESPONSE_COMPLETE:
+	case HTTP_RESPONSE_COMPLETE:
 	    break;
 	}
     }
 
-    response->state = RESPONSE_COMPLETE;
+    response->state = HTTP_RESPONSE_COMPLETE;
     return (T);
 }

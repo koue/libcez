@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "cez_net.h"
 #include "cez_net_http.h"
@@ -42,79 +43,109 @@ main(void)
     struct http_request *request;
     struct http_response *response;
 
+    time_t now = time(NULL);
+    char timestr[32];
+
     cez_test_start();
 
     // Valid HTTP URL
-    assert((request = http_request_create("http://chaosophia.net/")) != NULL);
+    assert((request = http_request_create("http://chaosophia.net/", "myagent")) != NULL);
     assert(strcmp(request->url_host, "chaosophia.net") == 0);
     assert(request->url_port == HTTP_PORT);
     assert(strcmp(request->url_path, "") == 0);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     http_request_free(request);
 
-    assert((request = http_request_create("http://chaosophia.net:8080/my.html")) != NULL);
+    assert((request = http_request_create("http://chaosophia.net:8080/my.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "chaosophia.net") == 0);
     assert(request->url_port == 8080);
     assert(strcmp(request->url_path, "my.html") == 0);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     http_request_free(request);
 
     // Valid HTTPS URL
-    assert((request = http_request_create("https://chaosophia.net/")) != NULL);
+    assert((request = http_request_create("https://chaosophia.net/", "myagent")) != NULL);
     assert(strcmp(request->url_host, "chaosophia.net") == 0);
     assert(request->url_port == HTTPS_PORT);
     assert(strlen(request->url_path) == 0);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     http_request_free(request);
 
-    assert((request = http_request_create("HTTPS://chaosophia.net:8443/1/2.html")) != NULL);
+    assert((request = http_request_create("HTTPS://chaosophia.net:8443/1/2.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "chaosophia.net") == 0);
     assert(request->url_port == 8443);
     assert(strcmp(request->url_path, "1/2.html") == 0);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     http_request_free(request);
 
     // Invalid HTTP URL
-    assert((request = http_request_create("xhttp://chaosophia.net")) != NULL);
-    assert(request->status == REQUEST_INVALID_URL);
+    assert((request = http_request_create("xhttp://chaosophia.net", "myagent")) != NULL);
+    assert(request->state == HTTP_REQUEST_URL_INVALID);
+    assert(strcmp(http_request_state_text(request->state), "Invalid URL") == 0);
     http_request_free(request);
 
-    assert((request = http_request_create("http://chaosophia.net::")) != NULL);
-    assert(request->status == REQUEST_INVALID_PORT);
+    assert((request = http_request_create("http://chaosophia.net::", "myagent")) != NULL);
+    assert(request->state == HTTP_REQUEST_PORT_INVALID);
+    assert(strcmp(http_request_state_text(request->state), "Invalid port") == 0);
     http_request_free(request);
 
     // Connection refused
-    assert((request = http_request_create("http://koue.chaosophia.net/index.html")) != NULL);
+    assert((request = http_request_create("http://koue.chaosophia.net/index.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "koue.chaosophia.net") == 0);
     assert(strcmp(request->url_path, "index.html") == 0);
     assert(request->url_port == HTTP_PORT);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     assert(http_request_send(request) == NIL);
-    assert(request->status == REQUEST_CONNECTION_ERROR);
-    assert(strcmp(http_request_status_text(request->status), "Connection refused"));
+    assert(request->state == HTTP_REQUEST_CONNECTION_ERROR);
     http_request_free(request);
 
     // Response 200
-    assert((request = http_request_create("http://chaosophia.net/index.html")) != NULL);
+    assert((request = http_request_create("http://chaosophia.net/index.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "chaosophia.net") == 0);
     assert(strcmp(request->url_path, "index.html") == 0);
     assert(request->url_port == HTTP_PORT);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     assert(http_request_send(request) == T);
-    assert(request->status == REQUEST_OK);
+    assert(request->state == HTTP_REQUEST_OK);
     assert((response = http_response_create(request)) != NULL);
     assert(http_response_parse(response) == T);
     assert(response->status == 200);
-    assert(strcmp(http_response_print_body(response), "</html>"));
+    assert(strcmp(http_response_body_print(response), "</html>"));
+    http_response_free(response);
+    http_request_free(request);
+
+    // Response 304
+    strftime(timestr, sizeof(timestr), "%a, %d %b %Y %T %Z", localtime(&now));
+    assert((request = http_request_create("http://chaosophia.net/index.html", "myagent")) != NULL);
+    http_request_header_add(request, "If-Modified-Since", timestr);
+    assert(http_request_send(request) == T);
+    assert((response = http_response_create(request)) != NULL);
+    assert(http_response_parse(response) == T);
+    assert(response->status == 304);
     http_response_free(response);
     http_request_free(request);
 
     // Response 404
-    assert((request = http_request_create("http://chaosophia.net/notexistzaq.html")) != NULL);
+    assert((request = http_request_create("http://chaosophia.net/notexistzaq.html", "myagent")) != NULL);
     assert(http_request_send(request) == T);
     assert((response = http_response_create(request)) != NULL);
     assert(http_response_parse(response) == T);
     assert(response->status == 404);
+    http_response_free(response);
+    http_request_free(request);
+
+    // HTTPS Response 200
+    assert((request = http_request_create("https://www.openbsd.org/index.html", "myagent")) != NULL);
+    assert(strcmp(request->url_host, "www.openbsd.org") == 0);
+    assert(strcmp(request->url_path, "index.html") == 0);
+    assert(request->url_port == HTTPS_PORT);
+    assert(request->state == HTTP_REQUEST_OK);
+    assert(http_request_send(request) == T);
+    assert(request->state == HTTP_REQUEST_OK);
+    assert((response = http_response_create(request)) != NULL);
+    assert(http_response_parse(response) == T);
+    assert(response->status == 200);
+    assert(strcmp(http_response_body_print(response), "</footer>"));
     http_response_free(response);
     http_request_free(request);
 
