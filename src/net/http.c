@@ -169,7 +169,7 @@ http_request_header_dump(struct http_request *request)
 }
 
 struct http_request *
-http_request_create(char *url, char *user_agent)
+http_request_create(const char *url, const char *user_agent)
 {
     struct pool *pool = pool_create(HTTP_REQUEST_BLOCK_SIZE);
     struct http_request *request = pool_alloc(pool, sizeof(struct http_request));

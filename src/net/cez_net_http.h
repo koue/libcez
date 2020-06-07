@@ -76,7 +76,7 @@ struct http_request {
 
 void http_request_timeout_set(struct http_request *request, long timeout);
 char *http_request_state_text(long code);
-struct http_request *http_request_create(char *url, char *user_agent);
+struct http_request *http_request_create(const char *url, const char *user_agent);
 void http_request_header_add(struct http_request *request,
                                 const char *key, const char *value);
 void http_request_header_dump(struct http_request *request);

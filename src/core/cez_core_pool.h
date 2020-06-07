@@ -42,7 +42,7 @@ struct pool {
 struct pool *pool_create(unsigned long blocksize);
 void pool_free(struct pool *p);
 void *pool_alloc(struct pool *p, unsigned long size);
-char *pool_strdup(struct pool *p, char *value);
+char *pool_strdup(struct pool *p, const char *value);
 char *pool_strcat(struct pool *p, char *s1, char *s2);
 char *pool_strcat3(struct pool *p, char *s1, char *s2, char *s3);
 

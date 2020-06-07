@@ -172,7 +172,7 @@ void *pool_alloc(struct pool *p, unsigned long size)
  * Returns: Ptr to dupped string
  **************************************************************************/
 
-char *pool_strdup(struct pool *p, char *value)
+char *pool_strdup(struct pool *p, const char *value)
 {
     char *s;
 
