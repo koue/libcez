@@ -1,4 +1,4 @@
-VERSION=2.10
+VERSION=2.12.1
 URL=https://www.fossil-scm.org/home/uv/
 PACKAGE=fossil-src-$(VERSION).tar.gz
 DIR=fossil-$(VERSION)

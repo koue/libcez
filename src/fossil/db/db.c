@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
+** Copyright (c) 2017-2020 Nikola Kolev <koue@chaosophia.net>
 ** Copyright (c) 2006 D. Richard Hipp
 **
 ** This program is free software; you can redistribute it and/or
@@ -70,6 +70,7 @@ char *db_text(const char *zDefault, const char *zSql, ...){
   return z;
 }
 
+#if 0 /* libcez */
 /*
 ** Print warnings if a query is inefficient.
 */
@@ -91,6 +92,7 @@ static void db_stats(Stmt *pStmt){
   pStmt->nStep = 0;
 #endif
 }
+#endif /* libcez */
 
 /*
 ** Call this routine when a database error occurs.
@@ -103,7 +105,13 @@ static void db_err(const char *zFormat, ...){
   va_end(ap);
 #if 0 /* libcez */
 #ifdef FOSSIL_ENABLE_JSON
-  if( g.json.isJsonMode ){
+  if( g.json.isJsonMode!=0 ){
+    /*
+    ** Avoid calling into the JSON support subsystem if it
+    ** has not yet been initialized, e.g. early SQLite log
+    ** messages, etc.
+    */
+    json_bootstrap_early();
     json_err( 0, z, 1 );
   }
   else
@@ -149,7 +157,9 @@ int db_finalize(Stmt *pStmt){
   }
   pStmt->pNext = 0;
   pStmt->pPrev = 0;
-  db_stats(pStmt);
+#if 0 /* libcez */
+  if( g.fSqlStats ){ db_stats(pStmt); }
+#endif /* libcez */
   blob_reset(&pStmt->sql);
   rc = sqlite3_finalize(pStmt->pStmt);
   db_check_result(rc, pStmt);
@@ -166,6 +176,7 @@ int db_finalize(Stmt *pStmt){
 void db_close(int reportErrors){
   sqlite3_stmt *pStmt;
   if( g.db==0 ) return;
+  sqlite3_set_authorizer(g.db, 0, 0);
 #if 0 /* libcez */
   if( g.fSqlStats ){
     int cur, hiwtr;
@@ -197,18 +208,21 @@ void db_close(int reportErrors){
   while( db.pAllStmt ){
     db_finalize(db.pAllStmt);
   }
-  if( db.nBegin && reportErrors ){
+  if( db.nBegin ){
+    if( reportErrors ){
 #if 0 /* libcez */
-    fossil_warning("Transaction started at %s:%d never commits",
-                   db.zStartFile, db.iStartLine);
+      fossil_warning("Transaction started at %s:%d never commits",
+                     db.zStartFile, db.iStartLine);
 #else
-  fprintf(stderr, "Transaction started at %s:%d never commits\n",
-                   db.zStartFile, db.iStartLine);
+      fprintf(stderr, "Transaction started at %s:%d never commits\n",
+                     db.zStartFile, db.iStartLine);
 #endif /* libcez */
+    }
     db_end_transaction(1);
   }
   pStmt = 0;
-  g.dbIgnoreErrors++; /* Stop "database locked" warnings from PRAGMA optimize */
+  sqlite3_busy_timeout(g.db, 0);
+  g.dbIgnoreErrors++; /* Stop "database locked" warnings */
   sqlite3_exec(g.db, "PRAGMA optimize", 0, 0, 0);
   g.dbIgnoreErrors--;
 #if 0 /* libcez */
@@ -385,32 +399,18 @@ int db_int(int iDflt, const char *zSql, ...){
 }
 
 /*
-** Execute multiple SQL statements.
+** Execute multiple SQL statements using printf-style formatting.
 */
 int db_multi_exec(const char *zSql, ...){
   Blob sql;
-  int rc = SQLITE_OK;
+  int rc;
   va_list ap;
-  const char *z, *zEnd;
-  sqlite3_stmt *pStmt;
+
   blob_init(&sql, 0, 0);
   va_start(ap, zSql);
   blob_vappendf(&sql, zSql, ap);
   va_end(ap);
-  z = blob_str(&sql);
-  while( rc==SQLITE_OK && z[0] ){
-    pStmt = 0;
-    rc = sqlite3_prepare_v2(g.db, z, -1, &pStmt, &zEnd);
-    if( rc ){
-      db_err("%s: {%s}", sqlite3_errmsg(g.db), z);
-    }else if( pStmt ){
-      db.nPrepare++;
-      while( sqlite3_step(pStmt)==SQLITE_ROW ){}
-      rc = sqlite3_finalize(pStmt);
-      if( rc ) db_err("%s: {%.*s}", sqlite3_errmsg(g.db), (int)(zEnd-z), z);
-    }
-    z = zEnd;
-  }
+  rc = db_exec_sql(blob_str(&sql));
   blob_reset(&sql);
   return rc;
 }
@@ -507,64 +507,79 @@ void db_init_database(
   const char *zSchema,     /* First part of schema */
   ...                      /* Additional SQL to run.  Terminate with NULL. */
 ){
-  sqlite3 *db;
+  sqlite3 *xdb;
   int rc;
   const char *zSql;
   va_list ap;
 
 #if 0 /* libcez */
-  db = db_open(zFileName ? zFileName : ":memory:");
+  xdb = db_open(zFileName ? zFileName : ":memory:");
 #else
-  if (sqlite3_open(zFileName, &db) != SQLITE_OK) {
+  if (sqlite3_open(zFileName, &xdb) != SQLITE_OK) {
     fprintf(stderr, "Cannot open database file: %s\n", zFileName);
     exit(1);
   }
 #endif /* libcez */
-  sqlite3_exec(db, "BEGIN EXCLUSIVE", 0, 0, 0);
-  rc = sqlite3_exec(db, zSchema, 0, 0, 0);
+  sqlite3_exec(xdb, "BEGIN EXCLUSIVE", 0, 0, 0);
+#if 0 /* libcez */
+  if( db.xAuth ){
+    sqlite3_set_authorizer(xdb, db.xAuth, db.pAuthArg);
+  }
+#endif /* libcez */
+  rc = sqlite3_exec(xdb, zSchema, 0, 0, 0);
   if( rc!=SQLITE_OK ){
-    db_err("%s", sqlite3_errmsg(db));
+    db_err("%s", sqlite3_errmsg(xdb));
   }
   va_start(ap, zSchema);
   while( (zSql = va_arg(ap, const char*))!=0 ){
-    rc = sqlite3_exec(db, zSql, 0, 0, 0);
+    rc = sqlite3_exec(xdb, zSql, 0, 0, 0);
     if( rc!=SQLITE_OK ){
-      db_err("%s", sqlite3_errmsg(db));
+      db_err("%s", sqlite3_errmsg(xdb));
     }
   }
   va_end(ap);
-  sqlite3_exec(db, "COMMIT", 0, 0, 0);
+  sqlite3_exec(xdb, "COMMIT", 0, 0, 0);
 #if 0 /* libcez */
   if( zFileName || g.db!=0 ){
-    sqlite3_close(db);
+    sqlite3_close(xdb);
   }else{
-    g.db = db;
+    g.db = xdb;
   }
 #else
-  sqlite3_close(db);
+  sqlite3_close(xdb);
 #endif /* libcez */
 }
 
 /*
-** SQL functions for debugging.
-**
-** The print() function writes its arguments on stdout, but only
-** if the -sqlprint command-line option is turned on.
+** Callback for sqlite3_trace_v2();
 */
-#if 0 /* libcez */
-LOCAL int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
-#else
 int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
-#endif /* libcez */
   sqlite3_stmt *pStmt = (sqlite3_stmt*)pP;
   char *zSql;
   int n;
   const char *zArg = (const char*)pX;
+  char zEnd[40];
+  if( m & SQLITE_TRACE_CLOSE ){
+    /* If we are tracking closes, that means we want to clean up static
+    ** prepared statements. */
+    while( db.pAllStmt ){
+      db_finalize(db.pAllStmt);
+    }
+    return 0;
+  }
   if( zArg[0]=='-' ) return 0;
+  if( m & SQLITE_TRACE_PROFILE ){
+    sqlite3_int64 nNano = *(sqlite3_int64*)pX;
+    double rMillisec = 0.000001 * nNano;
+    sqlite3_snprintf(sizeof(zEnd),zEnd," /* %.3fms */\n", rMillisec);
+  }else{
+    zEnd[0] = '\n';
+    zEnd[1] = 0;
+  }
   zSql = sqlite3_expanded_sql(pStmt);
   n = (int)strlen(zSql);
 #if 0 /* libcez */
-  fossil_trace("%s%s\n", zSql, (n>0 && zSql[n-1]==';') ? "" : ";");
+  fossil_trace("%s%s%s", zSql, (n>0 && zSql[n-1]==';') ? "" : ";", zEnd);
 #else
   if (g.sqltrace != NULL) {
     fprintf(g.sqltrace, "%s%s\n", zSql, (n>0 && zSql[n-1]==';') ? "" : ";");
@@ -574,5 +589,30 @@ int db_sql_trace(unsigned m, void *notUsed, void *pP, void *pX){
 #endif /* libcez */
   sqlite3_free(zSql);
   return 0;
+}
+
+
+/*
+** Execute multiple SQL statements.  The input text is executed
+** directly without any formatting.
+*/
+int db_exec_sql(const char *z){
+  int rc = SQLITE_OK;
+  sqlite3_stmt *pStmt;
+  const char *zEnd;
+  while( rc==SQLITE_OK && z[0] ){
+    pStmt = 0;
+    rc = sqlite3_prepare_v2(g.db, z, -1, &pStmt, &zEnd);
+    if( rc ){
+      db_err("%s: {%s}", sqlite3_errmsg(g.db), z);
+    }else if( pStmt ){
+      db.nPrepare++;
+      while( sqlite3_step(pStmt)==SQLITE_ROW ){}
+      rc = sqlite3_finalize(pStmt);
+      if( rc ) db_err("%s: {%.*s}", sqlite3_errmsg(g.db), (int)(zEnd-z), z);
+    }
+    z = zEnd;
+  }
+  return rc;
 }
 

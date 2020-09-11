@@ -1,5 +1,5 @@
 /*
-** Copyright (c) 2017-2019 Nikola Kolev <koue@chaosophia.net>
+** Copyright (c) 2017-2020 Nikola Kolev <koue@chaosophia.net>
 ** Copyright (c) 2006 D. Richard Hipp
 **
 ** This program is free software; you can redistribute it and/or
@@ -771,8 +771,8 @@ int vxprintf(
           ** "unused variable" compiler warning. */
         }
         if( zMem==0 ) zMem = "";
-        zExtra = bufpt = encode_json_string_literal(zMem);
-        length = strlen(bufpt);
+        zExtra = bufpt =
+          encode_json_string_literal(zMem, flag_altform2, &length);
         if( precision>=0 && precision<length ) length = precision;
         break;
       }
@@ -783,6 +783,12 @@ int vxprintf(
         blob_init(&wiki, zWiki, limit);
         wiki_convert(&wiki, pBlob, wiki_convert_flags(flag_altform2));
         blob_reset(&wiki);
+        length = width = 0;
+        break;
+      }
+      case etSHELLESC: {
+        char *zArg = va_arg(ap, char*);
+        blob_append_escaped_arg(pBlob, zArg);
         length = width = 0;
         break;
       }
