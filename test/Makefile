@@ -1,6 +1,5 @@
 #
 SUBDIR= 	core \
-		fossil \
 		net \
 		prayer
 

@@ -1,6 +1,7 @@
 20200921:
 
   Move mydb to separate repository: libmydb.
+  Move fossil to separate repository: libfsl.
 
 20200911:
 
