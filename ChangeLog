@@ -1,3 +1,7 @@
+20200921:
+
+  Move mydb to separate repository: libmydb.
+
 20200911:
 
   Upgrade src/fossil to version 2.12.1.

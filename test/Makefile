@@ -47,17 +47,6 @@ CFLAGS+=	-I${LOCALBASE}/include
 LDFLAGS+=	-L${LOCALBASE}/lib
 .endif
 
-.ifndef NOMYDB
-PROGS+=		mydb_test
-CFLAGS+=	-I${.CURDIR}/../src/fossil/base \
-		-I${.CURDIR}/../src/mydb \
-		-I${LOCALBASE}/include
-LDFLAGS+=	-L${.CURDIR}/../src/fossil/base \
-		-L${.CURDIR}/../src/mydb \
-		-L${LOCALBASE}/lib/mysql
-LDADD.mydb_test=-lmariadb -lcezmydb -lcezfossilbase -lcezqueue -lcezmisc
-.endif
-
 MAN=
 MK_DEBUG_FILES=	no
 MAKEOBJDIR= .
@@ -70,7 +59,6 @@ test:
 	./hmac_test
 	./kv_test
 	./log_test
-#	./mydb_test
 	./queue_test
 	./time_test
 	./url_test
