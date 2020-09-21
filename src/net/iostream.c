@@ -198,8 +198,10 @@ void iostream_close(struct iostream *x)
     if (x->obuffer)
         iostream_flush(x);      /* Flush data in write buffer */
 
-    if (x->ssl)
+    if (x->ssl) {
         ssl_shutdown(x->ssl);
+        iostream_exit();
+    }
 
     iostream_free(x);
     close(fd);
@@ -243,10 +245,11 @@ static int iostream_read_wait(struct iostream *x)
     if (x->itimeout == 0) {
         /* Wait indefinitely */
         while (select(x->fd + 1, &readfds, NIL, NIL, NIL) < 0) {
-            if (errno != EINTR)
+            if (errno != EINTR) {
                 fprintf(stderr, "iostream_getchar(): select() failed: %s",
                           strerror(errno));
 		exit(1);
+	    }
         }
         return ((FD_ISSET(x->fd, &readfds)) ? T : NIL);
     }
@@ -255,10 +258,11 @@ static int iostream_read_wait(struct iostream *x)
     timeout.tv_usec = 0;
 
     while (select(x->fd + 1, &readfds, NIL, NIL, &timeout) < 0) {
-        if (errno != EINTR)
+        if (errno != EINTR) {
             fprintf(stderr, "iostream_getchar(): select() failed: %s",
                       strerror(errno));
             exit(1);
+	}
     }
     return ((FD_ISSET(x->fd, &readfds)) ? T : NIL);
 }
@@ -448,9 +452,10 @@ BOOL iostream_have_input(struct iostream * x)
     timeout.tv_usec = 0;
 
     while (select(x->fd + 1, &readfds, NIL, NIL, &timeout) < 0) {
-        if (errno != EINTR)
+        if (errno != EINTR) {
             fprintf(stderr, "iostream_getchar(): select() failed");
 	    exit(1);
+	}
     }
 
     if (FD_ISSET(x->fd, &readfds))
@@ -496,10 +501,11 @@ static int iostream_write_wait(struct iostream *x)
     if (x->otimeout == 0) {
         /* Wait indefinitely */
         while (select(x->fd + 1, NIL, &writefds, NIL, NIL) < 0) {
-            if (errno != EINTR)
+            if (errno != EINTR) {
                 fprintf(stderr, "iostream_write_wait(): select() failed: %s",
                           strerror(errno));
 		exit(1);
+	    }
         }
         return ((FD_ISSET(x->fd, &writefds)) ? T : NIL);
     }
@@ -508,10 +514,11 @@ static int iostream_write_wait(struct iostream *x)
     timeout.tv_usec = 0;
 
     while (select(x->fd + 1, NIL, &writefds, NIL, &timeout) < 0) {
-        if (errno != EINTR)
+        if (errno != EINTR) {
             fprintf(stderr, "iostream_write_wait(): select() failed: %s",
                       strerror(errno));
             exit(1);
+	}
     }
     return ((FD_ISSET(x->fd, &writefds)) ? T : NIL);
 }

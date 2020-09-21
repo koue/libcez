@@ -254,9 +254,10 @@ ipaddr_set(struct ipaddr *ipaddr, unsigned long version,
         0x00, 0x00, 0xff, 0xff
     };
 
-    if (version != 4 && version != 6)
+    if (version != 4 && version != 6) {
         fprintf(stderr, "ipaddr_set(): IPv4 and IPv6 only supported!");
 	exit(1);
+    }
 
     ipaddr->version = version;
     memset(ipaddr->addr, 0, 16);

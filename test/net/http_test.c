@@ -135,6 +135,7 @@ main(void)
     http_request_free(request);
 
     // HTTPS Response 200
+    // 1
     assert((request = http_request_create("https://www.openbsd.org/index.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "www.openbsd.org") == 0);
     assert(strcmp(request->url_path, "index.html") == 0);
@@ -146,6 +147,20 @@ main(void)
     assert(http_response_parse(response) == T);
     assert(response->status == 200);
     assert(strcmp(http_response_body_print(response), "</footer>"));
+    http_response_free(response);
+    http_request_free(request);
+
+    // 2
+    assert((request = http_request_create("https://raw.githubusercontent.com/koue/rssroll/develop/tests/atom.xml", "myagent")) != NULL);
+    assert(strcmp(request->url_host, "raw.githubusercontent.com") == 0);
+    assert(request->url_port == HTTPS_PORT);
+    assert(request->state == HTTP_REQUEST_OK);
+    assert(http_request_send(request) == T);
+    assert(request->state == HTTP_REQUEST_OK);
+    assert((response = http_response_create(request)) != NULL);
+    assert(http_response_parse(response) == T);
+    assert(response->status == 200);
+    assert(strcmp(http_response_body_print(response), "</feed>"));
     http_response_free(response);
     http_request_free(request);
 
