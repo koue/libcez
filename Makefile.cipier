@@ -11,14 +11,10 @@ COMMENT=	Collection of useful functions
 
 LICENSE=	BSD2CLAUSE
 
-LIB_DEPENDS=	libsqlite3.so:databases/sqlite3
-
 SSL_VERSION=	3.0.2
 USE_GITHUB=	yes
 GH_ACCOUNT=	koue
 GH_PROJECT=	libcez
-
-USES=		mysql:103m
 
 CFLAGS+=	-Wall \
 		-I${WRKDIR}/libressl-${SSL_VERSION}/include
