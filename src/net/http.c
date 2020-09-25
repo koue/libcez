@@ -222,7 +222,7 @@ http_request_send(struct http_request *request)
     stream = request->stream = iostream_create(request->pool, request->fd, 0);
     iostream_set_timeout(stream, request->timeout);
     if (request->isssl) {
-        ssl_client_context_init();
+        iostream_ssl_client_init(stream);
 	iostream_ssl_start_client(stream);
     }
 

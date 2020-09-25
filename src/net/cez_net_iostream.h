@@ -12,6 +12,7 @@ struct iostream {
     void *ssl;                  /* Actually SSL * */
     void *bio;                  /* SSL bio stream */
     BOOL ieof;                  /* Input stream has reached end of file */
+    void *client_ctx;
 
     /* Input buffer */
     unsigned char *ibuffer;     /* Input buffer */
@@ -43,6 +44,7 @@ void iostream_free_buffers(struct iostream *x);
 
 void iostream_close(struct iostream *x);
 
+void iostream_ssl_client_init(struct iostream *x);
 BOOL iostream_ssl_start_server(struct iostream *x);
 BOOL iostream_ssl_start_client(struct iostream *x);
 

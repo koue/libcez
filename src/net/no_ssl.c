@@ -70,10 +70,10 @@ int ssl_prune_sessions(struct ssl_config *ssl_config)
     return (NIL);
 }
 
-void ssl_client_context_init(void)
+void *ssl_client_context_init(void)
 {
 }
 
-void ssl_client_context_free(void)
+void ssl_client_context_free(void *client_ctx)
 {
 }

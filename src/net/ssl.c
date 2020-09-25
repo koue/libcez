@@ -30,7 +30,7 @@ BOOL ssl_is_available(void)
 //static SSL_CTX *server_ctx;
 
 /* Global SSL context shared by client iostreams */
-static SSL_CTX *client_ctx;
+//static SSL_CTX *client_ctx;
 
 /* Identifier string used by both context */
 static unsigned char *sid_ctx = (unsigned char *) "libcez SID";
@@ -494,14 +494,16 @@ static unsigned char *sid_ctx = (unsigned char *) "libcez SID";
 //    SSL_CTX_free(server_ctx);
 //}
 
-void ssl_client_context_init(void)
+void *ssl_client_context_init(void)
 {
+    SSL_CTX *client_ctx;
+
     SSL_library_init();
 
     OpenSSL_add_all_algorithms();  /* Load cryptos, et.al. */
     SSL_load_error_strings();   /* Bring in and register error messages */
 
-    client_ctx = SSL_CTX_new(TLSv1_2_client_method());   /* Create new context */
+    client_ctx = (void *) SSL_CTX_new(TLSv1_2_client_method());   /* Create new context */
 //    SSL_CTX_set_session_cache_mode(client_ctx, SSL_SESS_CACHE_BOTH);
 //    SSL_CTX_set_info_callback(client_ctx, info_callback);
 //    #ifdef SSL_MODE_AUTO_RETRY
@@ -517,11 +519,12 @@ void ssl_client_context_init(void)
 //    SSL_CTX_set_timeout(client_ctx, 0);
 //    if (!SSL_CTX_set_cipher_list(client_ctx, ssl_cipher_list))
 //         printf("SSL_CTX_set_cipher_list\n");
+    return ((void *) client_ctx);
 }
 
-void ssl_client_context_free()
+void ssl_client_context_free(void *client_ctx)
 {
-    SSL_CTX_free(client_ctx);
+    SSL_CTX_free((SSL_CTX *)client_ctx);
 }
 
 void ssl_shutdown(void *ssl)
@@ -655,14 +658,14 @@ void ssl_free(void *ssl)
  * Start client side SSL
  ************************************************************************/
 
-void *ssl_start_client(int fd, unsigned long timeout)
+void *ssl_start_client(int fd, void *client_ctx, unsigned long timeout)
 {
     SSL *ssl;
     const SSL_CIPHER *c;
     char *ver;
     int bits;
 
-    if (!(ssl = (void *) SSL_new(client_ctx)))
+    if (!(ssl = (void *) SSL_new((SSL_CTX *)client_ctx)))
         return (NIL);
 
     SSL_set_session_id_context((SSL *) ssl, sid_ctx,

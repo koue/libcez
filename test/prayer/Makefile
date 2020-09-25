@@ -14,7 +14,7 @@ LDADD=		-lcezprayer -lcezcorepool -lcezcorebuffer -lcezcorestring -lcezcoreassoc
 
 .ifndef NOSSL
 # libressl
-CFLAGS+=	-DSSL=1 \
+CFLAGS+=	-DUSE_SSL=1 \
 		-I${LOCALBASE}/include
 LDFLAGS+=	-L${LOCALBASE}/lib
 LDADD+=		-lssl -lcrypto

@@ -50,7 +50,7 @@ void ssl_free(void *ssl);
 
 void *ssl_start_server(int fd, unsigned long timeout);
 
-void *ssl_start_client(int fd, unsigned long timeout);
+void *ssl_start_client(int fd, void *client_ctx, unsigned long timeout);
 
 int ssl_read(void *ssl, unsigned char *buffer, unsigned long blocksize);
 
@@ -60,6 +60,6 @@ int ssl_pending(void *ssl);
 
 int ssl_prune_sessions(struct ssl_config *ssl_config);
 
-void ssl_client_context_init(void);
+void *ssl_client_context_init(void);
 
-void ssl_client_context_free(void);
+void ssl_client_context_free(void *client_ctx);

@@ -40,8 +40,8 @@
 int
 main(void)
 {
-    struct http_request *request;
-    struct http_response *response;
+    struct http_request *request, *rq1, *rq2;
+    struct http_response *response, *rs1, *rs2;
 
     time_t now = time(NULL);
     char timestr[32];
@@ -135,7 +135,7 @@ main(void)
     http_request_free(request);
 
     // HTTPS Response 200
-    // 1
+    // 1 - single connection
     assert((request = http_request_create("https://www.openbsd.org/index.html", "myagent")) != NULL);
     assert(strcmp(request->url_host, "www.openbsd.org") == 0);
     assert(strcmp(request->url_path, "index.html") == 0);
@@ -150,19 +150,31 @@ main(void)
     http_response_free(response);
     http_request_free(request);
 
-    // 2
-    assert((request = http_request_create("https://raw.githubusercontent.com/koue/rssroll/develop/tests/atom.xml", "myagent")) != NULL);
-    assert(strcmp(request->url_host, "raw.githubusercontent.com") == 0);
-    assert(request->url_port == HTTPS_PORT);
-    assert(request->state == HTTP_REQUEST_OK);
-    assert(http_request_send(request) == T);
-    assert(request->state == HTTP_REQUEST_OK);
-    assert((response = http_response_create(request)) != NULL);
-    assert(http_response_parse(response) == T);
-    assert(response->status == 200);
-    assert(strcmp(http_response_body_print(response), "</feed>"));
-    http_response_free(response);
-    http_request_free(request);
+    // 2 - two parallel connections
+    assert((rq1 = http_request_create("https://raw.githubusercontent.com/koue/rssroll/develop/tests/atom.xml", "myagent")) != NULL);
+    assert((rq2 = http_request_create("https://raw.githubusercontent.com:443/koue/libcez/develop/README.md", "myagent")) != NULL);
+    assert(strcmp(rq1->url_host, "raw.githubusercontent.com") == 0);
+    assert(strcmp(rq2->url_host, "raw.githubusercontent.com") == 0);
+    assert(rq1->url_port == HTTPS_PORT);
+    assert(rq2->url_port == HTTPS_PORT);
+    assert(rq1->state == HTTP_REQUEST_OK);
+    assert(rq2->state == HTTP_REQUEST_OK);
+    assert(http_request_send(rq1) == T);
+    assert(http_request_send(rq2) == T);
+    assert(rq1->state == HTTP_REQUEST_OK);
+    assert(rq2->state == HTTP_REQUEST_OK);
+    assert((rs1 = http_response_create(rq1)) != NULL);
+    assert((rs2 = http_response_create(rq2)) != NULL);
+    assert(http_response_parse(rs1) == T);
+    assert(http_response_parse(rs2) == T);
+    assert(rs1->status == 200);
+    assert(rs2->status == 200);
+    assert(strcmp(http_response_body_print(rs1), "</feed>"));
+    assert(strcmp(http_response_body_print(rs2), "# libcez"));
+    http_response_free(rs1);
+    http_response_free(rs2);
+    http_request_free(rq1);
+    http_request_free(rq2);
 
     return (0);
 }

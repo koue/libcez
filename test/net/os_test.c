@@ -84,7 +84,7 @@ test_os_connect_inet_socket_http(struct pool *p, struct buffer *b)
 	buffer_reset(b);
 }
 
-#ifdef SSL
+#ifdef USE_SSL
 void
 test_os_connect_inet_socket_https(struct pool *p, struct buffer *b)
 {
@@ -97,7 +97,7 @@ test_os_connect_inet_socket_https(struct pool *p, struct buffer *b)
 
 	iostream_set_timeout(stream, IO_TIMEOUT);
 
-	ssl_client_context_init();
+	stream->client_ctx = ssl_client_context_init();
 	iostream_ssl_start_client(stream);
 
 	set_http_request(host);
@@ -127,7 +127,7 @@ main(void)
 	cez_test_start();
 
 	test_os_connect_inet_socket_http(pool, b);
-#ifdef SSL
+#ifdef USE_SSL
 	test_os_connect_inet_socket_https(pool, b);
 #endif
 

@@ -25,9 +25,9 @@
  * Initialiase iostream ssl client subsystem.
  ************************************************************************/
 
-void iostream_ssl_client_init(void)
+void iostream_ssl_client_init(struct iostream *x)
 {
-	ssl_client_context_init();	/* Initialize global SSL client context */
+	x->client_ctx = ssl_client_context_init();	/* Initialize SSL client context */
 }
 
 /* iostream_check_rsakey() ***********************************************
@@ -55,9 +55,9 @@ void iostream_ssl_client_init(void)
  * Clear up iostream subsystem.
  ************************************************************************/
 
-void iostream_exit()
+void iostream_exit(void *client_ctx)
 {
-    ssl_client_context_free();         /* free global SSL context */
+    ssl_client_context_free(client_ctx);         /* free SSL client context */
 }
 
 /* ====================================================================== */
@@ -82,6 +82,7 @@ struct iostream *iostream_create(struct pool *pool, int sockfd,
     x->fd = sockfd;
     x->ssl = NIL;
     x->bio = NIL;
+    x->client_ctx = NIL;
 
     x->ibuffer = pool_alloc(pool, x->blocksize);
     x->ibufend = x->ibuffer;
@@ -126,7 +127,7 @@ struct iostream *iostream_create(struct pool *pool, int sockfd,
 
 BOOL iostream_ssl_start_client(struct iostream * x)
 {
-    if (!(x->ssl = ssl_start_client(x->fd, x->itimeout))) {
+    if (!(x->ssl = ssl_start_client(x->fd, x->client_ctx, x->itimeout))) {
         x->oerror = T;
         return (NIL);
     }
@@ -200,7 +201,7 @@ void iostream_close(struct iostream *x)
 
     if (x->ssl) {
         ssl_shutdown(x->ssl);
-        iostream_exit();
+        iostream_exit(x->client_ctx);
     }
 
     iostream_free(x);
@@ -528,7 +529,7 @@ static int iostream_write_wait(struct iostream *x)
  * Flush buffered data to iostream,
  *
  * Returns: T on success, NIL on error
- *          
+ *
  ***********************************************************************/
 
 static BOOL iostream_write_ssl(struct iostream *x)
@@ -562,7 +563,7 @@ static BOOL iostream_write_ssl(struct iostream *x)
  * Flush buffered data to iostream,
  *
  * Returns: T on success, NIL on error
- *          
+ *
  ***********************************************************************/
 
 static int iostream_write_nossl(struct iostream *x)
