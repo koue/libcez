@@ -49,7 +49,6 @@ BOOL ipaddr_compare(struct ipaddr * addr1, struct ipaddr * addr2)
 
     return ((!memcmp(&addr1->addr, &addr2->addr,
                      (addr1->version == 6) ? 16 : 4)) ? T : NIL);
-                    
 }
 
 /* ====================================================================== */
