@@ -59,11 +59,6 @@
 
 #include "cez_prayer_utf8.h"
 
-//#include "cez_prayer_process.h"
-#include "cez_prayer_list.h"
-#include "cez_prayer_log.h"
-#include "cez_prayer_config.h"
-
 #include "cez_prayer_template_vals.h"
 #include "cez_prayer_template_fns.h"
 #include "cez_prayer_template_structs.h"

@@ -10,10 +10,7 @@ CFLAGS+=        -Wall -Wstrict-prototypes \
 		-I${.CURDIR}/../net \
 		-I${LOCALBASE}/include
 
-SRCS=		config.c \
-		html.c \
-		list.c \
-		log.c \
+SRCS=		html.c \
 		template.c \
 		template_compile.c \
 		template_expand.c \
@@ -21,20 +18,14 @@ SRCS=		config.c \
 		template_vals.c \
 		utf8.c \
 		cez_prayer.h \
-		cez_prayer_config.h \
 		cez_prayer_html.h \
-		cez_prayer_list.h \
-		cez_prayer_log.h \
 		cez_prayer_template_fns.h \
 		cez_prayer_template_structs.h \
 		cez_prayer_template_vals.h \
 		cez_prayer_utf8.h
 
 INCS=		cez_prayer.h \
-		cez_prayer_config.h \
 		cez_prayer_html.h \
-		cez_prayer_list.h \
-		cez_prayer_log.h \
 		cez_prayer_template_fns.h \
 		cez_prayer_template_structs.h \
 		cez_prayer_template_vals.h \

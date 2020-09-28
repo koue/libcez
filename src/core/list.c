@@ -1,23 +1,20 @@
-/* $Cambridge: hermes/src/prayer/lib/list.c,v 1.3 2008/09/16 09:59:57 dpc22 Exp $ */
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_core_pool.h"
+#include "cez_core_list.h"
 
-/* list_create() *********************************************************
+/* cez_list_create() *********************************************************
  *
  * Create a fresh list structure
  *      pool: Target pool for list and all list elements
  *  use_case: T => case is significant in _by_name operations.
  ************************************************************************/
 
-struct list *list_create(struct pool *pool, BOOL use_case)
+struct cez_list *cez_list_create(struct pool *pool, BOOL use_case)
 {
-    struct list *result = pool_alloc(pool, sizeof(struct list));
+    struct cez_list *result = pool_alloc(pool, sizeof(struct cez_list));
 
     result->pool = pool;
     result->use_case = use_case;
@@ -28,15 +25,15 @@ struct list *list_create(struct pool *pool, BOOL use_case)
     return (result);
 }
 
-/* list_free() ***********************************************************
+/* cez_list_free() ***********************************************************
  *
  * Free a list structure, including all list nodes. NOOP unless list
  * has been allocated in the NIL pool.
  ************************************************************************/
 
-void list_free(struct list *list)
+void cez_list_free(struct cez_list *list)
 {
-    struct list_item *current, *next;
+    struct cez_list_item *current, *next;
 
     if (list->pool)             /* NOOP if pool */
         return;
@@ -48,19 +45,19 @@ void list_free(struct list *list)
     free(list);
 }
 
-/* list_length() *********************************************************
+/* cez_list_length() *********************************************************
  *
  * Return current length of the list.
  ************************************************************************/
 
-unsigned long list_length(struct list *list)
+unsigned long cez_list_length(struct cez_list *list)
 {
     return (list->length);
 }
 
 /* ====================================================================== */
 
-/* list_unshift() ********************************************************
+/* cez_list_unshift() ********************************************************
  *
  * Add new entry to start of a list
  *     list:
@@ -68,10 +65,10 @@ unsigned long list_length(struct list *list)
  *     name: Name for this list item, if any
  ************************************************************************/
 
-void list_unshift(struct list *list, struct list_item *item, char *name)
+void cez_list_unshift(struct cez_list *list, struct cez_list_item *item, char *name)
 {
     if (item == NIL)
-        item = pool_alloc(list->pool, sizeof(struct list_item));
+        item = pool_alloc(list->pool, sizeof(struct cez_list_item));
 
     item->next = NIL;
 
@@ -91,7 +88,7 @@ void list_unshift(struct list *list, struct list_item *item, char *name)
     list->length++;
 }
 
-/* list_shift() **********************************************************
+/* cez_list_shift() **********************************************************
  *
  * Removes (but doesn't free) entry from the start of the list
  *   list:
@@ -99,9 +96,9 @@ void list_unshift(struct list *list, struct list_item *item, char *name)
  * Returns: Ptr to list item which was removed.
  ************************************************************************/
 
-struct list_item *list_shift(struct list *list)
+struct cez_list_item *cez_list_shift(struct cez_list *list)
 {
-    struct list_item *item;
+    struct cez_list_item *item;
 
     if (list->head == NIL)
         return (NIL);
@@ -120,7 +117,7 @@ struct list_item *list_shift(struct list *list)
 
 /* ====================================================================== */
 
-/* list_push() ***********************************************************
+/* cez_list_push() ***********************************************************
  *
  * Add an entry to the end of a list
  *    list:
@@ -128,10 +125,10 @@ struct list_item *list_shift(struct list *list)
  *    name: Name for new list item, if any.
  ************************************************************************/
 
-void list_push(struct list *list, struct list_item *item, char *name)
+void cez_list_push(struct cez_list *list, struct cez_list_item *item, char *name)
 {
     if (item == NIL)
-        item = pool_alloc(list->pool, sizeof(struct list_item));
+        item = pool_alloc(list->pool, sizeof(struct cez_list_item));
 
     item->next = NIL;
 
@@ -148,7 +145,7 @@ void list_push(struct list *list, struct list_item *item, char *name)
     list->length++;
 }
 
-/* list_pop() ************************************************************
+/* cez_list_pop() ************************************************************
  *
  * Removes (but doesn't free) entry from the end of a list
  *   list:
@@ -156,9 +153,9 @@ void list_push(struct list *list, struct list_item *item, char *name)
  * Returns: Ptr to list item which was removed.
  ************************************************************************/
 
-struct list_item *list_pop(struct list *list)
+struct cez_list_item *cez_list_pop(struct cez_list *list)
 {
-    struct list_item *item;
+    struct cez_list_item *item;
 
     if (list->head == NIL)
         return (NIL);
@@ -169,7 +166,7 @@ struct list_item *list_pop(struct list *list)
         list->head = NIL;
         list->tail = NIL;
     } else {
-        struct list_item *last = list->head;
+        struct cez_list_item *last = list->head;
 
         /* Find penultimate item on list: inefficient with single linked list! */
         while (last->next)
@@ -186,12 +183,12 @@ struct list_item *list_pop(struct list *list)
 /* ====================================================================== */
 
 BOOL
-list_insert_sorted(struct list * list, struct list_item * item, char *name)
+cez_list_insert_sorted(struct cez_list * list, struct cez_list_item * item, char *name)
 {
-    struct list_item *last, *next;
+    struct cez_list_item *last, *next;
 
     if (item == NIL)
-        item = pool_alloc(list->pool, sizeof(struct list_item));
+        item = pool_alloc(list->pool, sizeof(struct cez_list_item));
 
     item->next = NIL;
 
@@ -238,7 +235,7 @@ list_insert_sorted(struct list * list, struct list_item * item, char *name)
 
 /* ====================================================================== */
 
-/* list_lookup_byname() **************************************************
+/* cez_list_lookup_byname() **************************************************
  *
  * List lookup by name
  *    list:
@@ -247,9 +244,9 @@ list_insert_sorted(struct list * list, struct list_item * item, char *name)
  * Returns: list item or NIL if not found
  ************************************************************************/
 
-struct list_item *list_lookup_byname(struct list *list, char *name)
+struct cez_list_item *cez_list_lookup_byname(struct cez_list *list, char *name)
 {
-    struct list_item *item;
+    struct cez_list_item *item;
 
     if (list->use_case) {
         for (item = list->head; item; item = item->next) {
@@ -266,7 +263,7 @@ struct list_item *list_lookup_byname(struct list *list, char *name)
     return (NIL);
 }
 
-/* list_lookup_byoffset() ***********************************************
+/* cez_list_lookup_byoffset() ***********************************************
  *
  * List lookup by offset
  *    list:
@@ -275,10 +272,10 @@ struct list_item *list_lookup_byname(struct list *list, char *name)
  * Returns: list item or NIL if offset is out of range
  ************************************************************************/
 
-struct list_item *list_lookup_byoffset(struct list *list,
+struct cez_list_item *cez_list_lookup_byoffset(struct cez_list *list,
                                        unsigned long offset)
 {
-    struct list_item *item;
+    struct cez_list_item *item;
 
     for (item = list->head; item; item = item->next) {
         if (offset == 0)
@@ -290,14 +287,14 @@ struct list_item *list_lookup_byoffset(struct list *list,
 
 /* ====================================================================== */
 
-/* list_free_item() ******************************************************
+/* cez_list_free_item() ******************************************************
  *
  * Free single list item
  *   list:
  *   item: Item to remove
  ************************************************************************/
 
-static void list_free_item(struct list *list, struct list_item *item)
+static void cez_list_free_item(struct cez_list *list, struct cez_list_item *item)
 {
     if (list->pool)
         return;
@@ -308,7 +305,7 @@ static void list_free_item(struct list *list, struct list_item *item)
     free(item);
 }
 
-/* list_remove_byname() **************************************************
+/* cez_list_remove_byname() **************************************************
  *
  * Remove named entry from list
  *    list:
@@ -317,9 +314,9 @@ static void list_free_item(struct list *list, struct list_item *item)
  * Returns: T on sucess, NIL otherwise
  ************************************************************************/
 
-BOOL list_remove_byname(struct list *list, char *name)
+BOOL cez_list_remove_byname(struct cez_list *list, char *name)
 {
-    struct list_item *last, *current;
+    struct cez_list_item *last, *current;
 
     /* Check for empty list? */
     if (list->head == NIL)
@@ -335,7 +332,7 @@ BOOL list_remove_byname(struct list *list, char *name)
             if (current->next == NIL)
                 list->tail = NIL;
 
-            list_free_item(list, current);
+            cez_list_free_item(list, current);
             list->length--;
             return (T);
         }
@@ -346,7 +343,7 @@ BOOL list_remove_byname(struct list *list, char *name)
                 if ((last->next = current->next) == NIL)
                     list->tail = last;  /* Removed last item in list */
 
-                list_free_item(list, current);
+                cez_list_free_item(list, current);
                 list->length--;
                 return (T);
             }
@@ -362,7 +359,7 @@ BOOL list_remove_byname(struct list *list, char *name)
         if (current->next == NIL)
             list->tail = NIL;
 
-        list_free_item(list, current);
+        cez_list_free_item(list, current);
         list->length--;
         return (T);
     }
@@ -373,7 +370,7 @@ BOOL list_remove_byname(struct list *list, char *name)
             if ((last->next = current->next) == NIL)
                 list->tail = last;      /* Removed last item in list */
 
-            list_free_item(list, current);
+            cez_list_free_item(list, current);
             list->length--;
             return (T);
         }
@@ -381,7 +378,7 @@ BOOL list_remove_byname(struct list *list, char *name)
     return (NIL);
 }
 
-/* list_remove_byoffset() ************************************************
+/* cez_list_remove_byoffset() ************************************************
  *
  * Remove list entry by offset
  *    list:
@@ -390,9 +387,9 @@ BOOL list_remove_byname(struct list *list, char *name)
  * Returns: T on success, NIl otherwise
  ************************************************************************/
 
-BOOL list_remove_byoffset(struct list * list, unsigned long offset)
+BOOL cez_list_remove_byoffset(struct cez_list * list, unsigned long offset)
 {
-    struct list_item *current, *last;
+    struct cez_list_item *current, *last;
 
     /* Check for empty list? */
     if (list->head == NIL)
@@ -407,7 +404,7 @@ BOOL list_remove_byoffset(struct list * list, unsigned long offset)
         if (list->head == NIL)
             list->tail = NIL;
 
-        list_free_item(list, current);
+        cez_list_free_item(list, current);
         list->length--;
         return (T);
     }
@@ -420,7 +417,7 @@ BOOL list_remove_byoffset(struct list * list, unsigned long offset)
             if ((last->next = current->next) == NIL)
                 list->tail = last;      /* Removed last item in list */
 
-            list_free_item(list, current);
+            cez_list_free_item(list, current);
             list->length--;
             return (T);
         }
@@ -432,7 +429,7 @@ BOOL list_remove_byoffset(struct list * list, unsigned long offset)
 
 /* ====================================================================== */
 
-/* list_rename_item() ****************************************************
+/* cez_list_rename_item() ****************************************************
  *
  * Rename a list item
  *    list:
@@ -442,9 +439,9 @@ BOOL list_remove_byoffset(struct list * list, unsigned long offset)
  * Returns: T on success, NIL otherwise
  ************************************************************************/
 
-BOOL list_rename_item(struct list * list, char *oldname, char *newname)
+BOOL cez_list_rename_item(struct cez_list * list, char *oldname, char *newname)
 {
-    struct list_item *current;
+    struct cez_list_item *current;
 
     if (list->use_case) {
         for (current = list->head; current; current = current->next) {
