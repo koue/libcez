@@ -31,7 +31,7 @@
 #include <stdarg.h>
 
 #include "cez_core_pool.h"
-#include "cez_prayer.h"
+#include "cez_template.h"
 #include "cez_test.h"
 
 int

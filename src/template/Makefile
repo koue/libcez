@@ -1,13 +1,12 @@
 #
 MK_PROFILE=	no
 LOCALBASE?=	/usr/local
-LIB=            cezprayer
+LIB=            ceztemplate
 LIBDIR=		${LOCALBASE}/lib
 INCSDIR=	${LOCALBASE}/include
 CFLAGS+=        -Wall -Wstrict-prototypes \
 		-I${.CURDIR} \
 		-I${.CURDIR}/../core \
-		-I${.CURDIR}/../net \
 		-I${LOCALBASE}/include
 
 SRCS=		html.c \
@@ -17,19 +16,19 @@ SRCS=		html.c \
 		template_parse.c \
 		template_vals.c \
 		utf8.c \
-		cez_prayer.h \
-		cez_prayer_html.h \
-		cez_prayer_template_fns.h \
-		cez_prayer_template_structs.h \
-		cez_prayer_template_vals.h \
-		cez_prayer_utf8.h
+		cez_template.h \
+		cez_template_fns.h \
+		cez_template_html.h \
+		cez_template_structs.h \
+		cez_template_utf8.h \
+		cez_template_vals.h
 
-INCS=		cez_prayer.h \
-		cez_prayer_html.h \
-		cez_prayer_template_fns.h \
-		cez_prayer_template_structs.h \
-		cez_prayer_template_vals.h \
-		cez_prayer_utf8.h
+INCS=		cez_template.h \
+		cez_template_fns.h \
+		cez_template_html.h \
+		cez_template_structs.h \
+		cez_template_utf8.h \
+		cez_template_vals.h
 
 NO_OBJ=         yes
 

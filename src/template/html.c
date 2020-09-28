@@ -1,6 +1,6 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 
-#include "cez_prayer.h"
+#include "cez_template.h"
 
 void
 html_quote_char(struct buffer *b, unsigned char c)

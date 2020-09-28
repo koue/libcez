@@ -1,4 +1,4 @@
-/* Copytight (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copytight (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) Magnus Holmgren <magnus@kibibyte.se>,
  *                               <holmgren@lysator.liu.se>
  *
@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  */
 
-#include "cez_prayer.h"
+#include "cez_template.h"
 #include <iconv.h>
 
 #define JNK 0177
@@ -473,7 +473,7 @@ unsigned long utf8_count_chars(char *t, unsigned long bytes)
  * transliteration into strict ISO-8859-1, at least until someone moans.
  */
 
-static void 
+static void
 transliterate_1252(unsigned char *s)
 {
     unsigned char c, table[] = {
@@ -521,7 +521,7 @@ transliterate_1252(unsigned char *s)
 
         ' '     /* 0xa0  U+00A0  NO-BREAK SPACE */
     };
-        
+
     while ((c=*s)) {
         if ((c >= 0x80) && (c <= 0xa0))
             *s = table[(c-0x80)];
@@ -560,7 +560,7 @@ static unsigned char utf8_1252_char(unsigned char c)
     return(0x00);
 }
 
-/* Unicode characters 0x80 through 0x7ff encoding using following rule: 
+/* Unicode characters 0x80 through 0x7ff encoding using following rule:
  *
  *   U-00000080 - U-000007FF:  110xxxxx 10xxxxxx
  *
@@ -577,15 +577,15 @@ static unsigned char utf8_1252_char(unsigned char c)
  * code page 1252 characters.
  *
  ***********************************************************************/
-  
+
 BOOL
 utf8_is_8859_1(char *s0)
 {
     unsigned char *s = (unsigned char *)s0;
-  
+
     if (!(s && s[0]))
         return(T);
-  
+
     while (*s) {
         /* Transliterate smartquote characters into Latin-1 approximations */
         if ((s[0] == 0xe2) && (s[1] == 0x80) && utf8_1252_char(s[2])) {
@@ -607,17 +607,17 @@ utf8_is_8859_1(char *s0)
  * from Windows codepage 1252 into simple ASCII alternatives.
  *
  ***********************************************************************/
-  
+
 void
 utf8_to_8859_1(char *s0)
 {
     unsigned char *s = (unsigned char *)s0;
     unsigned char *d = s;
     unsigned char c;
-  
+
     if (!(s && s[0]))
         return;
-  
+
     while (*s) {
         /* Transliterate smartquote characters into Latin-1 approximations */
         if ((s[0] == 0xe2) && (s[1] == 0x80) && (c=utf8_1252_char(s[2]))) {
@@ -633,7 +633,7 @@ utf8_to_8859_1(char *s0)
                 s += 2;
             } else {
                 while (*s & 0x80)    /* Skip until next ascii character */
-                    s++;           
+                    s++;
             }
         } else if (s != d) {         /* Copy or skip as appropriate */
             *d++ = *s++;

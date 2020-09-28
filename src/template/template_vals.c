@@ -1,7 +1,7 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 
-#include "cez_prayer.h"
+#include "cez_template.h"
 
 struct template_vals_urlstate *
 template_vals_urlstate_create(struct pool *pool)

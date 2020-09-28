@@ -1,9 +1,4 @@
-/* $Cambridge: hermes/src/prayer/lib/template_fns.h,v 1.1 2010/07/07 08:52:14 dpc22 Exp $ */
-
-/************************************************
- *    Prayer - a Webmail Interface              *
- ************************************************/
-
+/* Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 

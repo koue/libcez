@@ -1,7 +1,7 @@
 #
 SUBDIR= 	core \
 		net \
-		prayer
+		template
 
 LOCALBASE?=	/usr/local
 PROGS=		cgi_test \
@@ -19,7 +19,6 @@ CFLAGS= 	-I${.CURDIR}/../src/cgi \
 		-I${.CURDIR}/../src/log \
 		-I${.CURDIR}/../src/misc \
 		-I${.CURDIR}/../src/queue \
-		-I${.CURDIR}/../src/prayer \
 		-I${.CURDIR}/../src/util
 
 LDFLAGS+=	-L${.CURDIR}/../src/cgi \
@@ -28,7 +27,6 @@ LDFLAGS+=	-L${.CURDIR}/../src/cgi \
 		-L${.CURDIR}/../src/log \
 		-L${.CURDIR}/../src/misc \
 		-L${.CURDIR}/../src/queue \
-		-L${.CURDIR}/../src/prayer \
 		-L${.CURDIR}/../src/util
 
 LDADD.cgi_test=		-lcezcgi -lcezcorepool

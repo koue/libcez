@@ -1,8 +1,8 @@
-/* Copyright (c) 2018 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
-#include "cez_prayer.h"
+#include "cez_template.h"
 
 /* ====================================================================== */
 

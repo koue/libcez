@@ -28,9 +28,10 @@
  *
  */
 
-#ifndef _CEZ_PRAYER_H
-#define _CEZ_PRAYER_H
+#ifndef _CEZ_TEMPLATE_H
+#define _CEZ_TEMPLATE_H
 
+/*
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -47,20 +48,19 @@
 #include <syslog.h>
 #include <pwd.h>
 #include <unistd.h>
+*/
+#include <assert.h>
+#include <sys/stat.h>
 
 #include "cez_core_pool.h"
 #include "cez_core_assoc.h"
 #include "cez_core_buffer.h"
 #include "cez_core_string.h"
 
-#include "cez_net_ssl.h"
-
-#include "cez_prayer_html.h"
-
-#include "cez_prayer_utf8.h"
-
-#include "cez_prayer_template_vals.h"
-#include "cez_prayer_template_fns.h"
-#include "cez_prayer_template_structs.h"
+#include "cez_template_utf8.h"
+#include "cez_template_vals.h"
+#include "cez_template_fns.h"
+#include "cez_template_html.h"
+#include "cez_template_structs.h"
 
 #endif
