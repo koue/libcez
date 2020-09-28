@@ -30,8 +30,7 @@ pre-configure:
 post-configure:
 .	for FILE in \
 		test/Makefile \
-		test/net/Makefile \
-		test/prayer/Makefile
+		test/net/Makefile
 	${REINPLACE_CMD} 's|-lssl|${WRKDIR}/libressl-${SSL_VERSION}/ssl/.libs/libssl.a|g' \
 		${WRKSRC}/${FILE}
 	${REINPLACE_CMD} 's|-lcrypto|${WRKDIR}/libressl-${SSL_VERSION}/crypto/.libs/libcrypto.a|g' \
