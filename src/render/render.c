@@ -42,23 +42,32 @@ cez_render_init(struct cez_render *render)
 }
 
 int
-cez_render_add(struct cez_render *render, const char *name,
+cez_render_add(struct cez_render *render, const char *macro,
     const char *filepath, void *arg)
 {
 	struct cez_render_entry *current;
+
+	if (macro == NULL) {
+		fprintf(stderr, "%s: error: empty macro\n", __func__);
+		return (-1);
+	}
+
 	if ((current = calloc(1, sizeof(*current))) == NULL) {
-		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
+		fprintf(stderr, "%s: error: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-	if ((current->name = strdup(name)) == NULL) {
+	if ((current->macro = strdup(macro)) == NULL) {
 		free(current);
-		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
+		fprintf(stderr, "%s: error: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
-	if ((current->filepath = strdup(filepath)) == NULL) {
-		free(current->name);
+	if (filepath == NULL) {
+		current->filepath = NULL;
+	}
+	else if ((current->filepath = strdup(filepath)) == NULL) {
+		free(current->macro);
 		free(current);
-		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
+		fprintf(stderr, "%s: error: %s\n", __func__, strerror(errno));
 		exit(1);
 	}
 	current->render_cb = arg;
@@ -67,11 +76,11 @@ cez_render_add(struct cez_render *render, const char *name,
 }
 
 struct cez_render_entry *
-cez_render_get(struct cez_render *render, const char *name)
+cez_render_get(struct cez_render *render, const char *macro)
 {
 	struct cez_render_entry *current;
 	TAILQ_FOREACH(current, &render->head, entry) {
-		if (strcmp(name, current->name) == 0) {
+		if (strcmp(macro, current->macro) == 0) {
 			return (current);
 		}
 	}
@@ -79,12 +88,12 @@ cez_render_get(struct cez_render *render, const char *name)
 }
 
 int
-cez_render_remove(struct cez_render *render, const char *name)
+cez_render_remove(struct cez_render *render, const char *macro)
 {
 	struct cez_render_entry *current;
 	TAILQ_FOREACH(current, &render->head, entry) {
-		if (strcmp(name, current->name) == 0) {
-			free(current->name);
+		if (strcmp(macro, current->macro) == 0) {
+			free(current->macro);
 			free(current->filepath);
 			TAILQ_REMOVE(&render->head, current, entry);
 			free(current);
@@ -100,22 +109,36 @@ cez_render_purge(struct cez_render *render)
 	struct cez_render_entry *current;
 	while (!TAILQ_EMPTY(&render->head)) {
 		current = TAILQ_FIRST(&render->head);
-		free(current->name);
+		free(current->macro);
 		free(current->filepath);
 		TAILQ_REMOVE(&render->head, current, entry);
 		free(current);
 	}
 }
 
-void
-cez_render_call(const char *filepath, cez_render_cb r, void *data)
+int
+cez_render_call(struct cez_render *render, const char *macro, void *data)
 {
+	struct cez_render_entry *entry;
 	FILE *f;
 	char s[8192];
 
-	if ((f = fopen(filepath, "re")) == NULL) {
-		printf("ERROR: fopen: %s: %s\n", filepath, strerror(errno));
-		return;
+	if ((entry = cez_render_get(render, macro)) == NULL) {
+		fprintf(stderr, "%s: error: unknow macro %s\n", __func__, macro);
+		return (-1);
+	}
+
+	if (entry->filepath == NULL) {
+		if (entry->render_cb != NULL) {
+			(*entry->render_cb)(macro, data);
+		}
+		return (0);
+	}
+
+	if ((f = fopen(entry->filepath, "re")) == NULL) {
+		fprintf(stderr, "%s: error: fopen: %s: %s\n", __func__,
+		    entry->filepath, strerror(errno));
+		return (-1);
 	}
 	while (fgets(s, sizeof(s), f)) {
 		char *a, *b;
@@ -125,8 +148,8 @@ cez_render_call(const char *filepath, cez_render_cb r, void *data)
 			a = b + 2;
 			if ((b = strstr(a, "%%")) != NULL) {
 				*b = 0;
-				if (r != NULL) {
-					(*r)(a, data);
+				if (entry->render_cb != NULL) {
+					(*entry->render_cb)(a, data);
 				}
 				a = b + 2;
 			}
@@ -134,4 +157,5 @@ cez_render_call(const char *filepath, cez_render_cb r, void *data)
 		printf("%s", a);
 	}
 	fclose(f);
+	return (0);
 }

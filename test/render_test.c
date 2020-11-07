@@ -42,41 +42,107 @@ typedef struct {
 	int pi;
 } mydata;
 
-static
-void render_data(const char *m, void *arg)
-{
-	mydata *item = (void *)(mydata *)arg;
+static struct cez_render render;
 
-	assert((strcmp(m, "TOP") == 0) ||
-		(strcmp(m, "MIDDLE") == 0) ||
-		(strcmp(m, "BOTTOM") == 0));
+static
+void render_middle(const char *macro, void *arg)
+{
+	mydata *item = (mydata *)arg;
+
+	assert(macro != NULL);
+	assert(item == NULL);
+	assert(strcmp(macro, "MIDDLE") == 0);
+}
+
+static
+void render_top(const char *macro, void *arg)
+{
+	mydata *item = (mydata *)arg;
+
+	assert(macro != NULL);
+	assert(item == NULL);
+	assert(strcmp(macro, "TOP") == 0);
+}
+
+static
+void render_simple(const char *macro, void *arg)
+{
+	mydata *item = (mydata *)arg;
+
+	assert(macro != NULL);
+	assert(item != NULL);
+	assert(strcmp(macro, "MACRO_SIMPLE") == 0);
 	assert(strcmp(item->p1, "param1") == 0);
 	assert(strcmp(item->p2, "param2") == 0);
 	assert(item->pi == 10);
 }
 
+static
+void render_data(const char *macro, void *arg)
+{
+	mydata *item = (mydata *)arg;
+
+	assert(macro != NULL);
+	assert(item != NULL);
+	assert((strcmp(macro, "TOP") == 0) ||
+		(strcmp(macro, "MIDDLE") == 0) ||
+		(strcmp(macro, "BOTTOM") == 0));
+	assert(strcmp(item->p1, "param1") == 0);
+	assert(strcmp(item->p2, "param2") == 0);
+	assert(item->pi == 10);
+	if (strcmp(macro, "TOP") == 0) {
+		assert(cez_render_call(&render, "TOP", NULL) == 0);
+	}
+	if (strcmp(macro, "MIDDLE") == 0) {
+		assert(cez_render_call(&render, "MIDDLE", NULL) == 0);
+	}
+}
+
 int
 main(void)
 {
-	struct cez_render render;
 	struct cez_render_entry *entry;
+	mydata DATA;
 
-	mydata testdata;
-	testdata.p1 = "param1";
-	testdata.p2 = "param2";
-	testdata.pi = 10;
+	DATA.p1 = "param1";
+	DATA.p2 = "param2";
+	DATA.pi = 10;
 
 	cez_test_start();
 
+	/* init */
 	cez_render_init(&render);
-	assert(cez_render_get(&render, "macro1") == NULL);
-	assert(cez_render_add(&render, "macro1", "RENDER.template",
+	/* NO MACRO */
+	assert(cez_render_get(&render, "NOMACRO") == NULL);
+	assert(cez_render_add(&render, NULL, NULL, (mydata *)render_data) == -1);
+	/* TOP */
+	assert(cez_render_get(&render, "TOP") == NULL);
+	assert(cez_render_add(&render, "TOP", NULL, (mydata *)render_top) == 0);
+	assert((entry = cez_render_get(&render, "TOP")) != NULL);
+	/* MIDDLE */
+	assert(cez_render_get(&render, "MIDDLE") == NULL);
+	assert(cez_render_add(&render, "MIDDLE", "RENDER_MIDDLE.template",
+	    (mydata *)render_middle) == 0);
+	assert((entry = cez_render_get(&render, "MIDDLE")) != NULL);
+	/* MACRO_FILE */
+	assert(cez_render_get(&render, "MACRO_FILE") == NULL);
+	assert(cez_render_add(&render, "MACRO_FILE", "RENDER.template",
 	    (mydata *)render_data) == 0);
-	assert((entry = cez_render_get(&render, "macro1")) != NULL);
-	cez_render_call(entry->filepath, entry->render_cb, (void *)&testdata);
-	assert(cez_render_remove(&render, "macro1") == 0);
+	assert((entry = cez_render_get(&render, "MACRO_FILE")) != NULL);
+	assert(cez_render_call(&render, "MACRO_FILE", (void *)&DATA) == 0);
+	assert(cez_render_remove(&render, "MACRO_FILE") == 0);
 	assert(cez_render_remove(&render, "notexist") == -1);
-	assert(cez_render_get(&render, "macro1") == NULL);
+	assert(cez_render_get(&render, "MACRO_FILE") == NULL);
+	/* MACRO_SIMPLE */
+	assert(cez_render_get(&render, "MACRO_SIMPLE") == NULL);
+	assert(cez_render_add(&render, "MACRO_SIMPLE", NULL,
+	    (mydata *)render_simple) == 0);
+	assert((entry = cez_render_get(&render, "MACRO_SIMPLE")) != NULL);
+	assert(cez_render_call(&render, "MACRO_SIMPLE", (void *)&DATA) == 0);
+	assert(cez_render_remove(&render, "MACRO_SIMPLE") == 0);
+	assert(cez_render_remove(&render, "notexist") == -1);
+	assert(cez_render_get(&render, "MACRO_SIMPLE") == NULL);
+	/* purge */
 	cez_render_purge(&render);
 
 	return (0);

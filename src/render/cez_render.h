@@ -37,7 +37,7 @@ typedef void (*cez_render_cb)(const char *macro, void *arg);
 
 struct cez_render_entry {
 	TAILQ_ENTRY(cez_render_entry) entry;
-	char *name;
+	char *macro;
 	char *filepath;
 	cez_render_cb render_cb;
 };
@@ -47,12 +47,12 @@ struct cez_render {
 };
 
 void cez_render_init(struct cez_render *render);
-int cez_render_add(struct cez_render *render, const char *name,
+int cez_render_add(struct cez_render *render, const char *macro,
     const char *filepath, void *arg);
 struct cez_render_entry *cez_render_get(struct cez_render *render,
-    const char *name);
-int cez_render_remove(struct cez_render *render, const char *name);
+    const char *macro);
+int cez_render_remove(struct cez_render *render, const char *macro);
 void cez_render_purge(struct cez_render *render);
-void cez_render_call(const char *filepath, cez_render_cb r, void *arg);
+int cez_render_call(struct cez_render *render, const char *macro, void *arg);
 
 #endif
