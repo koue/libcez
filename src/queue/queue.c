@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,9 @@ int
 cez_queue_add(struct cez_queue *queue, const char *name, const char *value)
 {
 	struct cez_queue_entry *current;
+
+	if (name == NULL || value == NULL)
+		return (-1);
 	if ((current = calloc(1, sizeof(*current))) == NULL) {
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
@@ -68,6 +71,9 @@ char *
 cez_queue_get(struct cez_queue *queue, const char *name)
 {
 	struct cez_queue_entry *current;
+
+	if (name == NULL)
+		return (NULL);
 	TAILQ_FOREACH(current, &queue->head, entry) {
 		if (strcmp(name, current->name) == 0) {
 			return (current->value);
@@ -89,6 +95,8 @@ cez_queue_print(struct cez_queue *queue)
 const char *
 cez_queue_check(struct cez_queue *queue, const char **params)
 {
+	if (params == NULL)
+		return (NULL);
 	for (int i = 0; params[i] != NULL; ++i) {
 		if (cez_queue_get(queue, params[i]) == NULL) {
 			return (params[i]);
@@ -101,6 +109,9 @@ int
 cez_queue_update(struct cez_queue *queue, const char *name, const char *value)
 {
 	struct cez_queue_entry *current;
+
+	if (name == NULL || value == NULL)
+		return (-1);
 	TAILQ_FOREACH(current, &queue->head, entry) {
 		if (strcmp(name, current->name) == 0) {
 			free(current->value);
@@ -120,6 +131,9 @@ int
 cez_queue_remove(struct cez_queue *queue, const char *name)
 {
 	struct cez_queue_entry *current;
+
+	if (name == NULL)
+		return (-1);
 	TAILQ_FOREACH(current, &queue->head, entry) {
 		if (strcmp(name, current->name) == 0) {
 			free(current->name);
