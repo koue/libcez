@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,19 @@
 #include <string.h>
 
 #include "cez_cgi.h"
+#include "cez_util.h"
 
 void
 cez_cgi_free(struct cez_cgi *cgi)
 {
+	cez_queue_purge(&cgi->query_queue);
 	pool_free(cgi->pool);
+}
+
+static int
+query_string_cb(const char *name, const char *value, void *arg)
+{
+	return (cez_queue_add(arg, name, value));
 }
 
 struct cez_cgi *
@@ -60,6 +68,17 @@ cez_cgi_create(void)
 	cgi->http_cookie = getenv("HTTP_COOKIE");
 	cgi->http_referer = getenv("HTTP_REFERER");
 	cgi->content_length = getenv("CONTENT_LENGTH") ? strtoul(getenv("CONTENT_LENGTH"), NULL, 10) : 0;
+
+	if (cgi->query_string != NULL) {
+		cez_queue_init(&cgi->query_queue);
+		if (cez_util_param_list(getenv("QUERY_STRING"), '&', query_string_cb,
+		    (void *)&cgi->query_queue) == -1) {
+			fprintf(stderr, "%s: Fail to initialize 'query_queue'\n", __func__);
+			cez_queue_purge(&cgi->query_queue);
+			pool_free(pool);
+			return (NULL);
+		}
+	}
 
 	return (cgi);
 }

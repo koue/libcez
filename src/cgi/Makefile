@@ -4,7 +4,10 @@ LOCALBASE?=	/usr/local
 LIB=		cezcgi
 LIBDIR=		${LOCALBASE}/lib
 INCSDIR=	${LOCALBASE}/include
-CFLAGS+=	-Wall -Wstrict-prototypes -I${.CURDIR}/../core -I${.CURDIR}
+CFLAGS+=	-Wall -Wstrict-prototypes -I${.CURDIR} \
+		-I${.CURDIR}/../core \
+		-I${.CURDIR}/../queue \
+		-I${.CURDIR}/../util
 SRCS=		cez_cgi.h cgi.c
 INCS=		cez_cgi.h
 NO_OBJ=		yes

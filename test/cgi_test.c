@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,10 +35,14 @@
 #include "cez_cgi.h"
 #include "cez_test.h"
 
+static char *test_head = "HEAD";
+static char *test_query_string = "a=show&b=this-is-it&c=3";
+
 void
 set_context(void)
 {
-	setenv("REQUEST_METHOD", "HEAD", 1);
+	setenv("REQUEST_METHOD", test_head, 1);
+	setenv("QUERY_STRING", test_query_string, 1);
 }
 
 int
@@ -47,11 +51,23 @@ main(void)
 	struct cez_cgi *cgi = cez_cgi_create();
 
 	cez_test_start();
+
+	assert((cgi = cez_cgi_create()) != NULL);
 	assert(cgi->request_method == NULL);
+	assert(cgi->query_string == NULL);
 	cez_cgi_free(cgi);
+
 	set_context();
-	cgi = cez_cgi_create();
-	assert(strcmp(cgi->request_method, "HEAD") == 0);
+	assert((cgi = cez_cgi_create()) != NULL);
+	assert(strcmp(cgi->request_method, test_head) == 0);
+	assert(strcmp(cgi->query_string, test_query_string) == 0);
+	assert(strcmp(cez_queue_get(&cgi->query_queue, "a"), "show") == 0);
+	assert(strcmp(cez_queue_get(&cgi->query_queue, "a"), "nottrue") != 0);
+	assert(strcmp(cez_queue_get(&cgi->query_queue, "b"), "this-is-it") == 0);
+	assert(strcmp(cez_queue_get(&cgi->query_queue, "c"), "3") == 0);
+	assert(strcmp(cez_queue_get(&cgi->query_queue, "c"), "0123") != -1);
+	assert(cez_queue_get(&cgi->query_queue, "notexist") == NULL);
+
 	cez_cgi_free(cgi);
 
 	return (0);

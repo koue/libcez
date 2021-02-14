@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@
 #define _CEZ_CGI_H
 
 #include <cez_core_pool.h>
+#include <cez_queue.h>
 
 struct cez_cgi {
 	struct pool *pool;
@@ -47,6 +48,8 @@ struct cez_cgi {
 	const char *http_referer;
 	const char *user_agent;
 	unsigned int content_length;
+
+	struct cez_queue query_queue;
 };
 
 void cez_cgi_free(struct cez_cgi *cgi);

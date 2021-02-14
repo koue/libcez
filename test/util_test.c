@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2020-2021 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,31 +34,61 @@
 #include "cez_util.h"
 #include "cez_test.h"
 
+static const char *list = "p1=v1;p2=v2;p3=";
+
 int
-param_list_false(const char *name, const char *value)
+param_list_false(const char *name, const char *value, void *arg)
 {
+	if (strcmp((char *)arg, list) != 0)
+		return (-1);
 	if ((strcmp(name, "p1") == 0) && (strcmp(value, "v1false") != 0))
 		return (-1);
 	return (0);
 }
 
 int
-param_list_true(const char *name, const char *value)
+param_list_false_null(const char *name, const char *value, void *arg)
 {
-	if ((strcmp(name, "p1") == 0) && (strcmp(value, "v1") == 0))
+	if (arg != NULL)
+		return (-1);
+	if ((strcmp(name, "p1") == 0) && (strcmp(value, "v1false") != 0))
+		return (-1);
+	return (0);
+}
+
+
+int
+param_list_true(const char *name, const char *value, void *arg)
+{
+	if ((strcmp(name, "p1") == 0) && (strcmp(value, "v1") == 0)
+	    && (strcmp((char *)arg, list) == 0))
 		return (0);
-	if ((strcmp(name, "p2") == 0) && (strcmp(value, "v2") == 0))
+	if ((strcmp(name, "p2") == 0) && (strcmp(value, "v2") == 0)
+	    && (strcmp((char *)arg, list) == 0))
 		return (0);
-	if ((strcmp(name, "p3") == 0) && (strcmp(value, "") == 0))
+	if ((strcmp(name, "p3") == 0) && (strcmp(value, "") == 0)
+	    && (strcmp((char *)arg, list) == 0))
 		return (0);
 	return (-1);
 }
 
 int
+param_list_true_null(const char *name, const char *value, void *arg)
+{
+	if ((strcmp(name, "p1") == 0) && (strcmp(value, "v1") == 0) && (arg == NULL))
+		return (0);
+	if ((strcmp(name, "p2") == 0) && (strcmp(value, "v2") == 0) && (arg == NULL))
+		return (0);
+	if ((strcmp(name, "p3") == 0) && (strcmp(value, "") == 0) && (arg == NULL))
+		return (0);
+	return (-1);
+}
+
+
+int
 main(void)
 {
 	int i;
-	static const char *list = "p1=v1;p2=v2;p3=";
 
 	cez_test_start();
 	for (i = 0; i <= 255; i++) {
@@ -67,8 +97,10 @@ main(void)
 		else
 			assert(cez_util_isspace((char)i) == 0);
 	}
-	assert(cez_util_param_list(list, ';', param_list_true) == 0);
-	assert(cez_util_param_list(list, ';', param_list_false) == -1);
+	assert(cez_util_param_list(list, ';', param_list_true_null, NULL) == 0);
+	assert(cez_util_param_list(list, ';', param_list_true, (void *)list) == 0);
+	assert(cez_util_param_list(list, ';', param_list_false_null, NULL) == -1);
+	assert(cez_util_param_list(list, ';', param_list_false, (void *)list) == -1);
 
 	return (0);
 }

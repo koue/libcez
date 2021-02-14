@@ -33,7 +33,7 @@ LDFLAGS+=	-L${.CURDIR}/../src/cgi \
 		-L${.CURDIR}/../src/render \
 		-L${.CURDIR}/../src/util
 
-LDADD.cgi_test=		-lcezcgi -lcezcorepool
+LDADD.cgi_test=		-lcezcgi -lcezcorepool -lcezqueue -lcezutil
 LDADD.hmac_test=	-lcezmisc -lcrypto
 LDADD.kv_test=		-lcezkv -lcezmisc
 LDADD.log_test=		-lcezlog -lcezcorepool
