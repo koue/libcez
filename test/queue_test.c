@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,11 +46,13 @@ main(void)
 	cez_queue_init(&config);
 	assert(cez_queue_get(&cgi, NULL) == NULL);
 	assert(cez_queue_get(&cgi, "name1") == NULL);
+	assert(cez_queue_update(&cgi, "name1", "value") == -1);
 	assert(cez_queue_get(&config, "param4") == NULL);
 	assert(cez_queue_add(&cgi, NULL, NULL) == -1);
 	assert(cez_queue_add(&cgi, "name1", NULL) == -1);
 	assert(cez_queue_add(&cgi, NULL, "black sheep wall") == -1);
 	assert(cez_queue_add(&cgi, "name1", "black sheep wall") == 0);
+	assert(cez_queue_add(&cgi, "name1", "show me the money") == -1);
 	assert(cez_queue_add(&cgi, "name2", "power overwhelming") == 0);
 	assert(configfile_parse("./configrc", &config) == 0);
 	assert(cez_queue_check(&cgi, NULL) == NULL);

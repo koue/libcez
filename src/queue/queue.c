@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,10 @@ cez_queue_add(struct cez_queue *queue, const char *name, const char *value)
 
 	if (name == NULL || value == NULL)
 		return (-1);
+	if (cez_queue_get(queue, name) != NULL) {
+		fprintf(stderr, "[ERROR] %s: %s already exists\n", __func__, name);
+		return (-1);
+	}
 	if ((current = calloc(1, sizeof(*current))) == NULL) {
 		fprintf(stderr, "[ERROR] %s: %s\n", __func__, strerror(errno));
 		exit(1);
@@ -109,6 +113,7 @@ int
 cez_queue_update(struct cez_queue *queue, const char *name, const char *value)
 {
 	struct cez_queue_entry *current;
+	int found = 0;
 
 	if (name == NULL || value == NULL)
 		return (-1);
@@ -122,7 +127,12 @@ cez_queue_update(struct cez_queue *queue, const char *name, const char *value)
 				    strerror(errno));
 				exit(1);
 			}
+			found = 1;
 		}
+	}
+	if (found == 0) {
+		fprintf(stderr, "[ERROR] %s: %s doesn't exist\n", __func__, name);
+		return (-1);
 	}
 	return (0);
 }
