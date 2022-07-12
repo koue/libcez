@@ -4,7 +4,7 @@ LOCALBASE?=	/usr/local
 LIB=            ceztemplate
 LIBDIR=		${LOCALBASE}/lib
 INCSDIR=	${LOCALBASE}/include
-CFLAGS+=        -Wall -Wstrict-prototypes \
+CFLAGS+=        -Wall -Wstrict-prototypes -fPIC \
 		-I${.CURDIR} \
 		-I${.CURDIR}/../core \
 		-I${LOCALBASE}/include

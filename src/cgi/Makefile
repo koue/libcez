@@ -4,7 +4,7 @@ LOCALBASE?=	/usr/local
 LIB=		cezcgi
 LIBDIR=		${LOCALBASE}/lib
 INCSDIR=	${LOCALBASE}/include
-CFLAGS+=	-Wall -Wstrict-prototypes -I${.CURDIR} \
+CFLAGS+=	-Wall -Wstrict-prototypes -fPIC -I${.CURDIR} \
 		-I${.CURDIR}/../core \
 		-I${.CURDIR}/../queue \
 		-I${.CURDIR}/../util
