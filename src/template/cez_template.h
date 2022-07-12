@@ -32,6 +32,7 @@
 #define _CEZ_TEMPLATE_H
 
 #include <assert.h>
+#include <sys/errno.h>
 #include <sys/stat.h>
 
 #include "cez_core_pool.h"
