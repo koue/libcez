@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net> */
+/* Copyright (c) 2018-2022 Nikola Kolev <koue@chaosophia.net> */
 /* Copyright (c) University of Cambridge 2000 - 2008 */
 /* See the file NOTICE for conditions of use and distribution. */
 
@@ -154,7 +154,7 @@ static void
 template_expand_var(char *s, struct str *str,
                     struct template_expand_state *state, char quote)
 {
-    struct pool *pool = state->pool;
+//    struct pool *pool = state->pool;
     char *val = template_fetch_var(s, state);
 
     if (!val)
@@ -164,8 +164,8 @@ template_expand_var(char *s, struct str *str,
         str_encode_url(str, val);
     } else if (quote == 'c') {
         str_encode_canon(str, val);
-    } else if (quote == '7') {
-        str_puts(str, utf8_from_imaputf7(pool, val));
+//    } else if (quote == '7') {
+//        str_puts(str, utf8_from_imaputf7(pool, val));
     } else {
         str_puts(str, val);
     }

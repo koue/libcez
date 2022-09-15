@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Nikola Kolev <koue@chaosophia.net>
+ * Copyright (c) 2018-2022 Nikola Kolev <koue@chaosophia.net>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,8 @@
 #include "cez_core_assoc.h"
 #include "cez_core_buffer.h"
 #include "cez_core_string.h"
+//#include "cez_template_utf8.h"
 
-#include "cez_template_utf8.h"
 #include "cez_template_vals.h"
 #include "cez_template_fns.h"
 #include "cez_template_html.h"

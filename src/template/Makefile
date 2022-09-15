@@ -15,19 +15,16 @@ SRCS=		html.c \
 		template_expand.c \
 		template_parse.c \
 		template_vals.c \
-		utf8.c \
 		cez_template.h \
 		cez_template_fns.h \
 		cez_template_html.h \
 		cez_template_structs.h \
-		cez_template_utf8.h \
 		cez_template_vals.h
 
 INCS=		cez_template.h \
 		cez_template_fns.h \
 		cez_template_html.h \
 		cez_template_structs.h \
-		cez_template_utf8.h \
 		cez_template_vals.h
 
 NO_OBJ=         yes

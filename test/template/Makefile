@@ -11,7 +11,7 @@ LDFLAGS+=	-L${.CURDIR}/../../src/core \
 		-L${LOCALBASE}/lib
 
 LDADD=		-lceztemplate -lcezcorepool -lcezcorebuffer -lcezcorestring \
-		-lcezcoreassoc -lutil -liconv
+		-lcezcoreassoc -lutil
 
 MAN=
 MK_DEBUG_FILES=	no
