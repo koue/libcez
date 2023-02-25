@@ -12,10 +12,7 @@ LDFLAGS+=	-L${.CURDIR}/../../src/core \
 
 LDADD=-lceznethttp -lceznet -lcezcorepool -lcezcorebuffer -lcezcorestring -lcezcoreassoc -lutil
 .ifndef NOSSL
-# libressl
-CFLAGS+=	-DUSE_SSL=1 \
-		-I${LOCALBASE}/include
-LDFLAGS+=	-L${LOCALBASE}/lib
+CFLAGS+=	-DUSE_SSL=1
 LDADD+=		-lssl -lcrypto
 .endif
 

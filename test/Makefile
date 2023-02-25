@@ -39,12 +39,6 @@ LDADD.time_test=	-lcezmisc
 LDADD.url_test=		-lcezmisc
 LDADD.util_test=	-lcezutil
 
-.ifndef NOSSL
-# libressl
-CFLAGS+=	-I${LOCALBASE}/include
-LDFLAGS+=	-L${LOCALBASE}/lib
-.endif
-
 MAN=
 MK_DEBUG_FILES=	no
 MAKEOBJDIR= .

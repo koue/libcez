@@ -3,37 +3,18 @@
 PORTNAME=	libcez
 PORTVERSION=	1.0
 CATEGORIES=	devel
-MASTER_SITES=	OPENBSD/LibreSSL:libressl
-DISTFILES=	libressl-${SSL_VERSION}.tar.gz:libressl
 
 MAINTAINER=	koue@chaosophia.net
 COMMENT=	Collection of useful functions
 
 LICENSE=	BSD2CLAUSE
 
-SSL_VERSION=	3.1.4
 USE_GITHUB=	yes
 GH_ACCOUNT=	koue
 GH_PROJECT=	libcez
 
-CFLAGS+=	-Wall \
-		-I${WRKDIR}/libressl-${SSL_VERSION}/include
+CFLAGS+=	-Wall
 
 MAKE_ARGS+=	BINDIR=${PREFIX}/sbin MANDIR=${PREFIX}/man/man
-
-pre-configure:
-	@(cd ${WRKDIR} && ${EXTRACT_CMD} ${EXTRACT_BEFORE_ARGS} ${DISTDIR}/libressl-${SSL_VERSION}.tar.gz ${EXTRACT_AFTER_ARGS})
-	@(cd ${WRKDIR}/libressl-${SSL_VERSION} && ${SETENV} ./configure && ${SETENV} ${MAKE_ENV} ${MAKE})
-
-post-configure:
-.	for FILE in \
-		test/Makefile \
-		test/net/Makefile
-	${REINPLACE_CMD} 's|-lssl|${WRKDIR}/libressl-${SSL_VERSION}/ssl/.libs/libssl.a|g' \
-		${WRKSRC}/${FILE}
-	${REINPLACE_CMD} 's|-lcrypto|${WRKDIR}/libressl-${SSL_VERSION}/crypto/.libs/libcrypto.a|g' \
-		${WRKSRC}/${FILE}
-.	endfor
-
 
 .include <bsd.port.mk>

@@ -1,3 +1,11 @@
+20220915:
+
+  Remove utf8 from template.
+
+20220912:
+
+  Move render to separate repository.
+
 20201105:
 
   Add render functions.
